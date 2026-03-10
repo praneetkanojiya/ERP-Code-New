@@ -34,16 +34,34 @@ export default function AdminClassesPage() {
         e.preventDefault();
         if (!newClass.name) return;
 
+        console.log("DEBUG: Starting addClass operation...", newClass);
         setSaving(true);
+
+        // Timeout to handle hanging promises
+        const timeout = setTimeout(() => {
+            console.error("DEBUG: Save operation timed out after 15s");
+            alert("Save operation is taking too long. Check your internet connection or Firebase rules.");
+            setSaving(false);
+        }, 15000);
+
         try {
-            await addDoc(collection(db, "classes"), {
+            const classRef = collection(db, "classes");
+            console.log("DEBUG: Collection reference created, sending addDoc...");
+
+            const docRef = await addDoc(classRef, {
                 ...newClass,
                 createdAt: serverTimestamp(),
             });
+
+            console.log("DEBUG: Save successful! ID:", docRef.id);
+            clearTimeout(timeout);
             setNewClass({ name: "", standard: '11th' });
-        } catch (error) {
-            console.error(error);
-            alert("Error adding class");
+        } catch (error: any) {
+            clearTimeout(timeout);
+            console.error("DEBUG: Firebase Save Error:", error);
+            console.error("Error Code:", error.code);
+            console.error("Error Message:", error.message);
+            alert(`Error adding class: ${error.message}`);
         } finally {
             setSaving(false);
         }

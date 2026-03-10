@@ -15,6 +15,15 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Sanity check for environment variables
+if (typeof window !== 'undefined') {
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+        console.error("FIREBASE ERROR: Missing environment variables! Check NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_PROJECT_ID.");
+    } else {
+        console.log("FIREBASE: Configuration loaded for project:", firebaseConfig.projectId);
+    }
+}
+
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
