@@ -16,18 +16,25 @@ export default function AdmissionApplyPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-700">Apply for Class</label>
-        <select
-            required
-            className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-            value={formData.classId || "11th"}
-            onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-        >
-            <option value="11th">11th Standard</option>
-            <option value="12th">12th Standard</option>
-        </select>
-    </div>
+    const [formData, setFormData] = useState({
+        studentName: "",
+        email: "",
+        phone: "",
+        dateOfBirth: "",
+        gender: "MALE",
+        address: "",
+        previousQualification: "",
+        percentage: "",
+        courseId: COURSES[0].id,
+        classId: "11th",
+        documents: {
+            tc: false,
+            sscMarksheet: false,
+            aadharStudent: false,
+            aadharParent: false,
+            migration: false,
+        }
+    });
 
     const handleDocChange = (name: string) => {
         setFormData(prev => ({
