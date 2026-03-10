@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, onSnapshot, doc, setDoc } from "firebase/firestore";
 import { ClipboardList, Check, X, Clock, Calendar, Search, Loader2 } from "lucide-react";
 import { AdmissionApplication } from "@/types";
 import { cn } from "@/lib/utils";
