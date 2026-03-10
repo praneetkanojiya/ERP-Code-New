@@ -17,8 +17,8 @@ export default function AdminAttendancePage() {
     useEffect(() => {
         // Fetch students
         const q = query(collection(db, "admissions"), where("status", "==", "APPROVED"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[];
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            const apps = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[];
             setStudents(apps);
             setLoading(false);
         });
@@ -32,7 +32,7 @@ export default function AdminAttendancePage() {
             const q = query(collection(db, "attendance"), where("date", "==", date));
             const snapshot = await getDocs(q);
             const records: Record<string, any> = {};
-            snapshot.docs.forEach(doc => {
+            snapshot.docs.forEach((doc: any) => {
                 const data = doc.data();
                 records[data.studentId] = data.status;
             });

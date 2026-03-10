@@ -18,8 +18,8 @@ export default function AdminAcademicMarksPage() {
 
     useEffect(() => {
         const q = query(collection(db, "admissions"), where("status", "==", "APPROVED"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[]);
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            setStudents(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[]);
             setLoading(false);
         });
         return () => unsubscribe();

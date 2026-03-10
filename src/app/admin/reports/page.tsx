@@ -19,15 +19,15 @@ export default function AdminReportsPage() {
     useEffect(() => {
         const fetchData = async () => {
             const admissionSnap = await getDocs(collection(db, "admissions"));
-            const admissions = admissionSnap.docs.map(doc => doc.data()) as AdmissionApplication[];
+            const admissions = admissionSnap.docs.map((doc: any) => doc.data()) as AdmissionApplication[];
 
             const transactionSnap = await getDocs(collection(db, "transactions"));
-            const transactions = transactionSnap.docs.map(doc => doc.data()) as Transaction[];
+            const transactions = transactionSnap.docs.map((doc: any) => doc.data()) as Transaction[];
 
             const attendanceSnap = await getDocs(collection(db, "attendance"));
-            const attendance = attendanceSnap.docs.map(doc => doc.data());
+            const attendance = attendanceSnap.docs.map((doc: any) => doc.data());
 
-            const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+            const totalRevenue = transactions.reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
             const approved = admissions.filter(a => a.status === 'APPROVED').length;
             const avgAtt = attendance.length > 0
                 ? (attendance.filter(a => a.status === 'PRESENT').length / attendance.length) * 100

@@ -19,13 +19,12 @@ export default function AdminPaymentsPage() {
     useEffect(() => {
         // Only fetch APPROVED students for payments
         const q = query(collection(db, "admissions"), where("status", "==", "APPROVED"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[]);
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            setStudents(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[]);
         });
 
-        const tQ = query(collection(db, "transactions"), serverTimestamp() !== null ? serverTimestamp() : serverTimestamp());
-        const unsubscribe2 = onSnapshot(collection(db, "transactions"), (snapshot) => {
-            setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[]);
+        const unsubscribe2 = onSnapshot(collection(db, "transactions"), (snapshot: any) => {
+            setTransactions(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
             setLoading(false);
         });
 
