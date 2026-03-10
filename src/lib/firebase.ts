@@ -30,10 +30,35 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Initialize Analytics conditionally (it only works in the browser)
-let analytics;
+// Connectivity Monitoring
 if (typeof window !== 'undefined') {
-    isSupported().then((isSupportedResult: boolean) => isSupportedResult ? analytics = getAnalytics(app) : null);
+    const { onSnapshotsInSync, onSnapshot, doc } = require("firebase/firestore");
+
+    // Check if we are in sync with the server
+    onSnapshotsInSync(db, () => {
+        console.log("FIREBASE: Firestore snapshots are in sync with the server.");
+    });
+
+    // Try a "heartbeat" read to check connectivity (to a non-existent doc just to see it resolve)
+    try {
+        const testRef = doc(db, "_system_", "heartbeat");
+        onSnapshot(testRef, (snapshot: any) => {
+            console.log("FIREBASE: Connection established. Heartbeat status:", snapshot.exists() ? "Active" : "Ready");
+        }, (error: any) => {
+            console.error("FIREBASE CONNECTION ERROR:", error.code, error.message);
+            if (error.code === 'permission-denied') {
+                console.error("CRITICAL: Your Firestore Security Rules are blocking access!");
+            }
+        });
+    } catch (e) {
+        console.error("FIREBASE: Failed to set up heartbeat:", e);
+    }
+}
+
+// Initialize Analytics conditionally
+let analytics: any = null;
+if (typeof window !== 'undefined') {
+    isSupported().then((res: boolean) => res ? analytics = getAnalytics(app) : null);
 }
 
 export { app, db, auth, storage, analytics };
