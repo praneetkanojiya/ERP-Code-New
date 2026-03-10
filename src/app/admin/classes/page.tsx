@@ -34,34 +34,35 @@ export default function AdminClassesPage() {
         e.preventDefault();
         if (!newClass.name) return;
 
-        console.log("DEBUG: Starting addClass operation...", newClass);
+        console.log("DEBUG: Attempting write with setDoc...");
         setSaving(true);
 
-        // Timeout to handle hanging promises
         const timeout = setTimeout(() => {
-            console.error("DEBUG: Save operation timed out after 15s");
-            alert("Save operation is taking too long. Check your internet connection or Firebase rules.");
+            console.error("DEBUG: Write TIMEOUT after 15s");
+            alert("Timeout during write. Check Firestore Mode and Security Rules.");
             setSaving(false);
         }, 15000);
 
         try {
-            const classRef = collection(db, "classes");
-            console.log("DEBUG: Collection reference created, sending addDoc...");
+            // Generate a random ID to test setDoc
+            const customId = `debug_${Date.now()}`;
+            const classRef = doc(db, "classes", customId);
 
-            const docRef = await addDoc(classRef, {
+            console.log("DEBUG: Sending setDoc to classes/", customId);
+
+            await setDoc(classRef, {
                 ...newClass,
-                createdAt: serverTimestamp(),
+                createdAt: new Date(), // using plain Date instead of serverTimestamp
+                debug: true
             });
 
-            console.log("DEBUG: Save successful! ID:", docRef.id);
+            console.log("DEBUG: setDoc SUCCESS!");
             clearTimeout(timeout);
             setNewClass({ name: "", standard: '11th' });
         } catch (error: any) {
             clearTimeout(timeout);
-            console.error("DEBUG: Firebase Save Error:", error);
-            console.error("Error Code:", error.code);
-            console.error("Error Message:", error.message);
-            alert(`Error adding class: ${error.message}`);
+            console.error("DEBUG: Write ERROR:", error);
+            alert(`Write Failed: ${error.message}`);
         } finally {
             setSaving(false);
         }

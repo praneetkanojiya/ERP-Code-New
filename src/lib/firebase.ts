@@ -1,8 +1,14 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, onSnapshotsInSync, onSnapshot, doc } from "firebase/firestore";
+import { getFirestore, onSnapshotsInSync, onSnapshot, doc, setLogLevel } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+
+// Enforcing verbose logging to catch why addDoc hangs
+if (typeof window !== 'undefined') {
+    setLogLevel('debug');
+    console.log("FIREBASE: Debug logging ENABLED.");
+}
 
 // Config
 const firebaseConfig = {
