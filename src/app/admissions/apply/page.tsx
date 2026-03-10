@@ -27,6 +27,9 @@ export default function AdmissionApplyPage() {
         percentage: "",
         courseId: COURSES[0].id,
         classId: "11th",
+        rollNumber: "",
+        tenthBoard: "SSC State Board",
+        admissionDate: new Date().toISOString().split('T')[0],
         documents: {
             tc: false,
             sscMarksheet: false,
@@ -55,7 +58,7 @@ export default function AdmissionApplyPage() {
 
             const docRef = await addDoc(collection(db, "admissions"), {
                 ...formData,
-                percentage: parseFloat(formData.percentage),
+                percentage: parseFloat(formData.percentage) || 0,
                 courseName: selectedCourse?.name || "",
                 status: "PENDING",
                 appliedAt: serverTimestamp(),
@@ -65,7 +68,6 @@ export default function AdmissionApplyPage() {
             console.log("Document written with ID: ", docRef.id);
             setLoading(false);
             setSubmitted(true);
-            // Removed the delayed router.push to prevent confusion if user wants to see success message
         } catch (error) {
             console.error("Error submitting application:", error);
             alert("Something went wrong. Please try again.");
@@ -169,9 +171,9 @@ export default function AdmissionApplyPage() {
                                         value={formData.gender}
                                         onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                                     >
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                        <option value="other">Other</option>
+                                        <option value="MALE">Male</option>
+                                        <option value="FEMALE">Female</option>
+                                        <option value="OTHER">Other</option>
                                     </select>
                                 </div>
                             </div>
@@ -180,31 +182,6 @@ export default function AdmissionApplyPage() {
                         {/* Academic Details */}
                         <div className="space-y-6">
                             <h2 className="text-xl font-bold border-b pb-2 text-slate-800">Academic Details</h2>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Previous Qualification</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="e.g. Class 12th / Diploma"
-                                    className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={formData.previousQualification}
-                                    onChange={(e) => setFormData({ ...formData, previousQualification: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Percentage / GPA</label>
-                                <input
-                                    required
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={formData.percentage}
-                                    onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
-                                />
-                            </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-700">Course Selection</label>
@@ -220,18 +197,68 @@ export default function AdmissionApplyPage() {
                                 </select>
                             </div>
 
-                            {/* Added Class Selection */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Apply for Class</label>
+                                <label className="text-sm font-semibold text-slate-700">Apply for Standard</label>
                                 <select
                                     required
                                     className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={(formData as any).classId || "11th"}
+                                    value={formData.classId}
                                     onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
                                 >
                                     <option value="11th">11th Standard</option>
                                     <option value="12th">12th Standard</option>
                                 </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-slate-700">Roll Number</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. 101"
+                                        className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold text-blue-600"
+                                        value={formData.rollNumber}
+                                        onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-slate-700">Date of Admission</label>
+                                    <input
+                                        required
+                                        type="date"
+                                        className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        value={formData.admissionDate}
+                                        onChange={(e) => setFormData({ ...formData, admissionDate: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">10th Board</label>
+                                <select
+                                    required
+                                    className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    value={formData.tenthBoard}
+                                    onChange={(e) => setFormData({ ...formData, tenthBoard: e.target.value })}
+                                >
+                                    <option value="SSC State Board">SSC State Board</option>
+                                    <option value="CBSE">CBSE</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="Other Board">Other Board</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">SSC Percentage / GPA</label>
+                                <input
+                                    required
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    className="w-full px-5 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    value={formData.percentage}
+                                    onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
+                                />
                             </div>
 
                             <div className="space-y-2">
