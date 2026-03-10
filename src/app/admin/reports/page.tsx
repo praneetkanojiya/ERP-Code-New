@@ -28,9 +28,9 @@ export default function AdminReportsPage() {
             const attendance = attendanceSnap.docs.map((doc: any) => doc.data());
 
             const totalRevenue = transactions.reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
-            const approved = admissions.filter(a => a.status === 'APPROVED').length;
+            const approved = admissions.filter((a: any) => a.status === 'APPROVED').length;
             const avgAtt = attendance.length > 0
-                ? (attendance.filter(a => a.status === 'PRESENT').length / attendance.length) * 100
+                ? (attendance.filter((a: any) => a.status === 'PRESENT').length / attendance.length) * 100
                 : 0;
 
             setStats({
