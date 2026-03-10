@@ -51,7 +51,7 @@ let analytics: any = null;
 if (typeof window !== 'undefined') {
     isSupported().then((res: boolean) => {
         if (res) analytics = getAnalytics(app);
-    }).catch(e => console.error("Analytics Error:", e));
+    }).catch((e: any) => console.error("Analytics Error:", e));
 }
 
 export { app, db, auth, storage, analytics };
