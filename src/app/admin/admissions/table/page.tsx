@@ -49,8 +49,8 @@ export default function AdminBulkAdmissionsPage() {
 
     useEffect(() => {
         const q = query(collection(db, "classes"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const classData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ClassInfo[];
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            const classData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ClassInfo[];
             setClasses(classData);
             if (classData.length > 0 && !selectedClassId) {
                 setSelectedClassId(classData[0].id);

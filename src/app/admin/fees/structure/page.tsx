@@ -27,7 +27,7 @@ export default function AdminFeeStructurePage() {
             const snapshot = await getDocs(q);
             const feeData: Record<string, CourseFee> = {};
 
-            snapshot.docs.forEach(doc => {
+            snapshot.docs.forEach((doc: any) => {
                 if (doc.id.startsWith(selectedClassId + "_")) {
                     const courseId = doc.id.replace(selectedClassId + "_", "");
                     const data = doc.data();
