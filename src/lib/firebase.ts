@@ -1,10 +1,10 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, onSnapshotsInSync, onSnapshot, doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-// TODO: Replace with user's actual Firebase config
+// Config
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -15,50 +15,43 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Sanity check for environment variables
-if (typeof window !== 'undefined') {
-    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-        console.error("FIREBASE ERROR: Missing environment variables! Check NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_PROJECT_ID.");
-    } else {
-        console.log("FIREBASE: Configuration loaded for project:", firebaseConfig.projectId);
-    }
-}
-
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Connectivity Monitoring
+// Sanity check for environment variables
 if (typeof window !== 'undefined') {
-    const { onSnapshotsInSync, onSnapshot, doc } = require("firebase/firestore");
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+        console.error("FIREBASE ERROR: Missing environment variables!");
+    } else {
+        console.log("FIREBASE: Config loaded for:", firebaseConfig.projectId);
+    }
 
-    // Check if we are in sync with the server
-    onSnapshotsInSync(db, () => {
-        console.log("FIREBASE: Firestore snapshots are in sync with the server.");
-    });
-
-    // Try a "heartbeat" read to check connectivity (to a non-existent doc just to see it resolve)
+    // Connectivity Monitoring
     try {
+        onSnapshotsInSync(db, () => {
+            console.log("FIREBASE: Firestore snapshots are in sync.");
+        });
+
         const testRef = doc(db, "_system_", "heartbeat");
         onSnapshot(testRef, (snapshot: any) => {
-            console.log("FIREBASE: Connection established. Heartbeat status:", snapshot.exists() ? "Active" : "Ready");
+            console.log("FIREBASE: Connection heartbeat:", snapshot.exists() ? "Active" : "Ready");
         }, (error: any) => {
             console.error("FIREBASE CONNECTION ERROR:", error.code, error.message);
-            if (error.code === 'permission-denied') {
-                console.error("CRITICAL: Your Firestore Security Rules are blocking access!");
-            }
         });
     } catch (e) {
-        console.error("FIREBASE: Failed to set up heartbeat:", e);
+        console.error("FIREBASE: Failed to set up connection monitoring:", e);
     }
 }
 
-// Initialize Analytics conditionally
+// Initialize Analytics
 let analytics: any = null;
 if (typeof window !== 'undefined') {
-    isSupported().then((res: boolean) => res ? analytics = getAnalytics(app) : null);
+    isSupported().then((res: boolean) => {
+        if (res) analytics = getAnalytics(app);
+    }).catch(e => console.error("Analytics Error:", e));
 }
 
 export { app, db, auth, storage, analytics };
