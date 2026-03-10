@@ -48,26 +48,15 @@ export default function AdminAdmissionsPage() {
 
     const updateStatus = async (id: string, status: string) => {
         setUpdatingId(id);
-        console.log(`DEBUG: Updating status for ADM-ID ${id} to ${status}...`);
-
-        const timeout = setTimeout(() => {
-            console.error("DEBUG: updateStatus timed out after 15s");
-            alert("Update operation timed out. Check connection.");
-            setUpdatingId(null);
-        }, 15000);
-
         try {
             const appRef = doc(db, "admissions", id);
             await updateDoc(appRef, {
                 status: status,
                 updatedAt: new Date(),
             });
-            console.log("DEBUG: Status update SUCCESS.");
-            clearTimeout(timeout);
-        } catch (error: any) {
-            clearTimeout(timeout);
-            console.error("DEBUG: updateStatus ERROR:", error);
-            alert(`Failed: ${error.message}`);
+        } catch (error) {
+            console.error("Error updating status:", error);
+            alert("Failed to update status.");
         } finally {
             setUpdatingId(null);
         }
@@ -76,27 +65,16 @@ export default function AdminAdmissionsPage() {
     const saveDetails = async () => {
         if (!editingApp?.id) return;
         setUpdatingId(editingApp.id);
-        console.log("DEBUG: Saving student details for:", editingApp.studentName);
-
-        const timeout = setTimeout(() => {
-            console.error("DEBUG: saveDetails timed out after 15s");
-            alert("Save operation timed out.");
-            setUpdatingId(null);
-        }, 15000);
-
         try {
             const appRef = doc(db, "admissions", editingApp.id);
             await updateDoc(appRef, {
                 ...editingDetails,
                 updatedAt: new Date(),
             });
-            console.log("DEBUG: saveDetails SUCCESS.");
-            clearTimeout(timeout);
             setEditingApp(null);
-        } catch (error: any) {
-            clearTimeout(timeout);
-            console.error("DEBUG: saveDetails ERROR:", error);
-            alert(`Failed: ${error.message}`);
+        } catch (error) {
+            console.error("Error saving details:", error);
+            alert("Failed to save student details.");
         } finally {
             setUpdatingId(null);
         }

@@ -34,35 +34,16 @@ export default function AdminClassesPage() {
         e.preventDefault();
         if (!newClass.name) return;
 
-        console.log("DEBUG: Attempting write with setDoc...");
         setSaving(true);
-
-        const timeout = setTimeout(() => {
-            console.error("DEBUG: Write TIMEOUT after 15s");
-            alert("Timeout during write. Check Firestore Mode and Security Rules.");
-            setSaving(false);
-        }, 15000);
-
         try {
-            // Generate a random ID to test setDoc
-            const customId = `debug_${Date.now()}`;
-            const classRef = doc(db, "classes", customId);
-
-            console.log("DEBUG: Sending setDoc to classes/", customId);
-
-            await setDoc(classRef, {
+            await addDoc(collection(db, "classes"), {
                 ...newClass,
-                createdAt: new Date(), // using plain Date instead of serverTimestamp
-                debug: true
+                createdAt: serverTimestamp(),
             });
-
-            console.log("DEBUG: setDoc SUCCESS!");
-            clearTimeout(timeout);
             setNewClass({ name: "", standard: '11th' });
-        } catch (error: any) {
-            clearTimeout(timeout);
-            console.error("DEBUG: Write ERROR:", error);
-            alert(`Write Failed: ${error.message}`);
+        } catch (error) {
+            console.error("Error adding class:", error);
+            alert("Error adding class");
         } finally {
             setSaving(false);
         }
