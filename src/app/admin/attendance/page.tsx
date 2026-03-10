@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, addDoc, serverTimestamp, onSnapshot, doc, setDoc } from "firebase/firestore";
-import { ClipboardList, Check, X, Clock, Calendar, Search } from "lucide-react";
+import { ClipboardList, Check, X, Clock, Calendar, Search, Loader2 } from "lucide-react";
 import { AdmissionApplication } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -96,8 +95,9 @@ export default function AdminAttendancePage() {
                     <button
                         onClick={saveAttendance}
                         disabled={saving}
-                        className="px-6 py-2.5 premium-gradient text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                        className="px-6 py-2.5 premium-gradient text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center"
                     >
+                        {saving ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
                         {saving ? "Saving..." : "Save Daily Records"}
                     </button>
                 </div>

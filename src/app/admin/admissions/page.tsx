@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
-import { GraduationCap, Search, CheckCircle, XCircle, Clock, Filter, FileText } from "lucide-react";
+import { GraduationCap, Search, CheckCircle, XCircle, Clock, Filter, FileText, Loader2 } from "lucide-react";
 import { AdmissionApplication } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ export default function AdminAdmissionsPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("ALL");
+    const [updatingId, setUpdatingId] = useState<string | null>(null);
 
     useEffect(() => {
         const q = query(collection(db, "admissions"), orderBy("appliedAt", "desc"));
@@ -29,6 +30,7 @@ export default function AdminAdmissionsPage() {
     }, []);
 
     const updateStatus = async (id: string, status: string) => {
+        setUpdatingId(id);
         try {
             const appRef = doc(db, "admissions", id);
             await updateDoc(appRef, {
@@ -37,6 +39,9 @@ export default function AdminAdmissionsPage() {
             });
         } catch (error) {
             console.error("Error updating status:", error);
+            alert("Failed to update status.");
+        } finally {
+            setUpdatingId(null);
         }
     };
 
@@ -173,21 +178,24 @@ export default function AdminAdmissionsPage() {
                                                         <>
                                                             <button
                                                                 onClick={() => updateStatus(app.id!, 'APPROVED')}
-                                                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Approve">
-                                                                <CheckCircle size={18} />
+                                                                disabled={updatingId === app.id}
+                                                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50" title="Approve">
+                                                                {updatingId === app.id ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle size={18} />}
                                                             </button>
                                                             <button
                                                                 onClick={() => updateStatus(app.id!, 'REJECTED')}
-                                                                className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Reject">
-                                                                <XCircle size={18} />
+                                                                disabled={updatingId === app.id}
+                                                                className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50" title="Reject">
+                                                                {updatingId === app.id ? <Loader2 className="animate-spin" size={16} /> : <XCircle size={18} />}
                                                             </button>
                                                         </>
                                                     )}
                                                     {app.status !== 'PENDING' && (
                                                         <button
                                                             onClick={() => updateStatus(app.id!, 'PENDING')}
-                                                            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors" title="Move to Pending">
-                                                            <Clock size={18} />
+                                                            disabled={updatingId === app.id}
+                                                            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50" title="Move to Pending">
+                                                            {updatingId === app.id ? <Loader2 className="animate-spin" size={16} /> : <Clock size={18} />}
                                                         </button>
                                                     )}
                                                 </div>

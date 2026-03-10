@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { GraduationCap, User, CreditCard, ClipboardList, LogOut, CheckCircle, Clock, XCircle, FileText, ChevronRight, CheckSquare, IndianRupee } from "lucide-react";
+import { GraduationCap, User, CreditCard, ClipboardList, LogOut, CheckCircle, Clock, XCircle, FileText, ChevronRight, CheckSquare, IndianRupee, Loader2 } from "lucide-react";
 import { AdmissionApplication, Transaction } from "@/types";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -112,8 +112,9 @@ export default function StudentPortalPage() {
                         </div>
                         <button
                             disabled={loading}
-                            className="w-full py-4 premium-gradient text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all active:scale-[0.98] disabled:opacity-50"
+                            className="w-full py-4 premium-gradient text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
                         >
+                            {loading ? <Loader2 className="animate-spin mr-2" size={20} /> : null}
                             {loading ? "Verifying..." : "Access My Dashboard"}
                         </button>
                     </form>
