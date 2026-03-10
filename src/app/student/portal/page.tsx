@@ -176,8 +176,8 @@ export default function StudentPortalPage() {
                         {/* Summary Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white p-6 rounded-[2rem] shadow-lg border border-slate-100">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Class</p>
-                                <p className="text-xl font-black text-slate-900">{student?.currentClass || '11th'}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Division</p>
+                                <p className="text-xl font-black text-slate-900">{student?.className || student?.currentClass || '11th'}</p>
                             </div>
                             <div className="bg-white p-6 rounded-[2rem] shadow-lg border border-slate-100">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Roll No</p>

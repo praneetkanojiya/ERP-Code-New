@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { CreditCard, Save, Loader2, IndianRupee, Layers, Search } from "lucide-react";
-import { COLLEGES_COURSES, COLLEGES_CLASSES } from "@/lib/constants";
+import { collection, query, getDocs, setDoc, doc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { CreditCard, Save, Loader2, IndianRupee, ArrowLeft, Layers } from "lucide-react";
+import { COLLEGES_COURSES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface CourseFee {
@@ -14,14 +14,34 @@ interface CourseFee {
     inst3: number;
 }
 
+interface ClassInfo {
+    id: string;
+    name: string;
+    standard: '11th' | '12th';
+}
+
 export default function AdminFeeStructurePage() {
-    const [selectedClassId, setSelectedClassId] = useState(COLLEGES_CLASSES[0].id);
+    const [classes, setClasses] = useState<ClassInfo[]>([]);
+    const [selectedClassId, setSelectedClassId] = useState<string>("");
     const [fees, setFees] = useState<Record<string, CourseFee>>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
+        const q = query(collection(db, "classes"));
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            const classData = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ClassInfo[];
+            setClasses(classData);
+            if (classData.length > 0 && !selectedClassId) {
+                setSelectedClassId(classData[0].id);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
         const fetchFees = async () => {
+            if (!selectedClassId) return;
             setLoading(true);
             const q = query(collection(db, "feeStructure"));
             const snapshot = await getDocs(q);
@@ -57,7 +77,7 @@ export default function AdminFeeStructurePage() {
                     updatedAt: serverTimestamp(),
                 });
             }
-            alert(`Fee structure for ${COLLEGES_CLASSES.find(c => c.id === selectedClassId)?.name} updated!`);
+            alert(`Fee structure updated!`);
         } catch (error) {
             console.error(error);
             alert("Error saving fee structure");
@@ -91,17 +111,17 @@ export default function AdminFeeStructurePage() {
                             value={selectedClassId}
                             onChange={(e) => setSelectedClassId(e.target.value)}
                         >
-                            {COLLEGES_CLASSES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            {classes.map(c => <option key={c.id} value={c.id}>{c.name} ({c.standard})</option>)}
                         </select>
                     </div>
                 </div>
                 <button
                     onClick={handleSave}
-                    disabled={saving}
+                    disabled={saving || !selectedClassId}
                     className="w-full md:w-auto px-10 py-4 premium-gradient text-white rounded-[2rem] font-bold shadow-xl hover:shadow-blue-500/25 transition-all disabled:opacity-50 flex items-center justify-center"
                 >
                     {saving ? <Loader2 className="animate-spin mr-2" size={20} /> : <Save className="mr-2" size={20} />}
-                    Save {COLLEGES_CLASSES.find(c => c.id === selectedClassId)?.name} Fees
+                    Save {classes.find(c => c.id === selectedClassId)?.name || "Class"} Fees
                 </button>
             </header>
 

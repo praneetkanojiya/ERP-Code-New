@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
-import { GraduationCap, Search, CheckCircle, XCircle, Clock, Filter, FileText, Loader2 } from "lucide-react";
+import { GraduationCap, Search, CheckCircle, XCircle, Clock, Filter, FileText, Loader2, Layers } from "lucide-react";
 import { AdmissionApplication } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,16 @@ export default function AdminAdmissionsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("ALL");
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [classes, setClasses] = useState<{ id: string, name: string }[]>([]);
+    const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
+
+    useEffect(() => {
+        const q = query(collection(db, "classes"));
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            setClasses(snapshot.docs.map((doc: any) => ({ id: doc.id, name: doc.data().name })));
+        });
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         const q = query(collection(db, "admissions"), orderBy("appliedAt", "desc"));
@@ -49,7 +59,8 @@ export default function AdminAdmissionsPage() {
         const matchesSearch = app.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             app.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === "ALL" || app.status === filterStatus;
-        return matchesSearch && matchesStatus;
+        const matchesClass = selectedClassId === "ALL" || app.classId === selectedClassId;
+        return matchesSearch && matchesStatus && matchesClass;
     });
 
     return (
@@ -112,18 +123,31 @@ export default function AdminAdmissionsPage() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <Filter className="text-slate-400" size={18} />
-                        <select
-                            className="px-4 py-3 rounded-2xl bg-white border border-slate-200 focus:outline-none shadow-sm"
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                        >
-                            <option value="ALL">All Status</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="APPROVED">Approved</option>
-                            <option value="REJECTED">Rejected</option>
-                        </select>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center space-x-2">
+                            <Layers className="text-slate-400" size={18} />
+                            <select
+                                className="px-4 py-3 rounded-2xl bg-white border border-slate-200 focus:outline-none shadow-sm"
+                                value={selectedClassId}
+                                onChange={(e) => setSelectedClassId(e.target.value)}
+                            >
+                                <option value="ALL">All Divisions</option>
+                                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Filter className="text-slate-400" size={18} />
+                            <select
+                                className="px-4 py-3 rounded-2xl bg-white border border-slate-200 focus:outline-none shadow-sm"
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                <option value="ALL">All Status</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -134,7 +158,7 @@ export default function AdminAdmissionsPage() {
                             <thead>
                                 <tr className="bg-slate-50/50 border-b border-slate-100">
                                     <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Student</th>
-                                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Course</th>
+                                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Division</th>
                                     <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Percentage</th>
                                     <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
                                     <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
@@ -165,7 +189,12 @@ export default function AdminAdmissionsPage() {
                                                     <span className="text-xs text-slate-500">{app.email}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600">{app.courseName}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-slate-700">{app.className || 'Unassigned'}</span>
+                                                    <span className="text-[10px] text-slate-400 uppercase tracking-widest">{app.courseName}</span>
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">{app.percentage}%</span>
                                             </td>
