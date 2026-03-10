@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, onSnapshot, doc, addDoc, serverTimestamp, getDocs, where } from "firebase/firestore";
-import { CreditCard, Search, Plus, Printer, CheckCircle2, DollarSign, User, Calendar } from "lucide-react";
+import { CreditCard, Search, Plus, Printer, CheckCircle2, DollarSign, User, Calendar, Loader2 } from "lucide-react";
 import { AdmissionApplication, Transaction } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export default function AdminPaymentsPage() {
     const [amount, setAmount] = useState("");
     const [method, setMethod] = useState<Transaction['paymentMethod']>("MANUAL");
     const [search, setSearch] = useState("");
+    const [recording, setRecording] = useState(false);
 
     useEffect(() => {
         // Only fetch APPROVED students for payments
@@ -23,7 +24,7 @@ export default function AdminPaymentsPage() {
             setStudents(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AdmissionApplication[]);
         });
 
-        const unsubscribe2 = onSnapshot(collection(db, "transactions"), (snapshot: any) => {
+        const unsubscribe2 = onSnapshot(collection(db, "payments"), (snapshot: any) => {
             setTransactions(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
             setLoading(false);
         });
@@ -35,9 +36,10 @@ export default function AdminPaymentsPage() {
         e.preventDefault();
         if (!selectedStudent || !amount) return;
 
+        setRecording(true);
         try {
             const receiptNum = "RCP-" + Math.floor(100000 + Math.random() * 900000);
-            await addDoc(collection(db, "transactions"), {
+            await addDoc(collection(db, "payments"), { // Fixed: using 'payments' instead of 'transactions' for consistency
                 studentId: selectedStudent.id,
                 studentName: selectedStudent.studentName,
                 amount: parseFloat(amount),
@@ -53,6 +55,8 @@ export default function AdminPaymentsPage() {
         } catch (error) {
             console.error(error);
             alert("Error recording payment");
+        } finally {
+            setRecording(false);
         }
     };
 
@@ -142,9 +146,11 @@ export default function AdminPaymentsPage() {
 
                             <button
                                 type="submit"
-                                className="w-full py-4 premium-gradient text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+                                disabled={recording}
+                                className="w-full py-4 premium-gradient text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center disabled:opacity-50"
                             >
-                                Confirm & Generate Receipt
+                                {recording ? <Loader2 className="animate-spin mr-2" size={20} /> : null}
+                                {recording ? "Recording..." : "Confirm & Generate Receipt"}
                             </button>
                         </form>
                     </div>
