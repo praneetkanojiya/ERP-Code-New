@@ -16,8 +16,8 @@ export default function AdminAdmissionsPage() {
     useEffect(() => {
         const q = query(collection(db, "admissions"), orderBy("appliedAt", "desc"));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const apps = snapshot.docs.map(doc => ({
+        const unsubscribe = onSnapshot(q, (snapshot: any) => {
+            const apps = snapshot.docs.map((doc: any) => ({
                 id: doc.id,
                 ...doc.data()
             })) as AdmissionApplication[];
