@@ -105,6 +105,7 @@ export default function AdminAdmissionsPage() {
             courseId: app.courseId || "",
             courseName: app.courseName || "",
             currentClass: app.currentClass || "",
+            academicYear: app.academicYear || "",
         });
     };
 
@@ -117,7 +118,8 @@ export default function AdminAdmissionsPage() {
                 className: foundClass.name,
                 courseId: foundClass.courseId || "",
                 courseName: foundClass.courseName || "",
-                currentClass: foundClass.standard || ""
+                currentClass: foundClass.standard || "",
+                academicYear: foundClass.academicYear || ""
             });
         } else {
             // If no class is selected or found, clear class-related details
@@ -127,7 +129,8 @@ export default function AdminAdmissionsPage() {
                 className: "",
                 courseId: "",
                 courseName: "",
-                currentClass: ""
+                currentClass: "",
+                academicYear: ""
             });
         }
     };
@@ -263,7 +266,7 @@ export default function AdminAdmissionsPage() {
                                     >
                                         <option value="">-- Assign a Class --</option>
                                         {classes.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                            <option key={c.id} value={c.id}>{c.name} {c.academicYear ? `(${c.academicYear})` : ''}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -309,7 +312,7 @@ export default function AdminAdmissionsPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-slate-700">{app.className || 'Unassigned'}</span>
+                                                    <span className="text-sm font-bold text-slate-700">{app.className ? `${app.className} ${app.academicYear ? `(${app.academicYear})` : ''}` : 'Unassigned'}</span>
                                                     <span className="text-[10px] text-slate-400 uppercase tracking-widest">{app.courseName}</span>
                                                 </div>
                                             </td>

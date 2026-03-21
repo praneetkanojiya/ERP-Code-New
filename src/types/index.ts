@@ -27,6 +27,7 @@ export interface AdmissionApplication {
     currentClass?: '11th' | '12th';
     className?: string; // e.g. "11th Science - Div A"
     classId?: string; // Division/Section ID
+    academicYear?: string; // e.g. "2024-2025"
     rollNumber?: string;
     tenthBoard?: string;
     admissionDate?: string;

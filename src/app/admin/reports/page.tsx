@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
-import { BarChart3, PieChart, TrendingUp, Users, CreditCard, ClipboardList, ArrowLeft, Layers, Loader2 } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Users, CreditCard, ClipboardList, ArrowLeft, Layers, Loader2, Download, FileText } from "lucide-react";
 import Link from "next/link";
 import { AdmissionApplication, Transaction } from "@/types";
 import { COLLEGES_COURSES } from "@/lib/constants";
@@ -90,9 +90,38 @@ export default function AdminReportsPage() {
             setAdmissionsList(admissions);
             setCourseDistribution(distribution);
             setLoading(false);
+            setLoading(false);
         };
         fetchData();
     }, [selectedClassId]);
+
+    const handleExportCSV = () => {
+        if (!admissionsList.length) {
+            alert("No data available to export.");
+            return;
+        }
+
+        const headers = ["Student Name", "Roll Number", "Class Name", "Academic Year", "Phone", "Email", "Percentage", "Admission Status"];
+        const rows = admissionsList.map(app => [
+            `"${app.studentName}"`,
+            `"${app.rollNumber || ''}"`,
+            `"${app.className || ''}"`,
+            `"${app.academicYear || ''}"`,
+            `"${app.phone || ''}"`,
+            `"${app.email || ''}"`,
+            `"${app.percentage || '0'}"`,
+            `"${app.status}"`
+        ]);
+        
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Admissions_Report_${selectedClassId === 'all' ? 'All_Classes' : selectedClassId}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-10">
@@ -106,16 +135,23 @@ export default function AdminReportsPage() {
                     <p className="text-slate-500 font-medium">Key metrics and analytics for your college management.</p>
                 </div>
 
-                <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 w-full md:w-auto">
-                    <Layers className="text-slate-400 ml-3" size={18} />
-                    <select
-                        className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-8 cursor-pointer flex-1"
-                        value={selectedClassId}
-                        onChange={(e) => setSelectedClassId(e.target.value)}
-                    >
-                        <option value="all">All Divisions Combined</option>
-                        {classes.map(c => <option key={c.id} value={c.id}>{c.name} ({c.standard})</option>)}
-                    </select>
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                    <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 w-full md:w-auto">
+                        <Layers className="text-slate-400 ml-3" size={18} />
+                        <select
+                            className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-8 cursor-pointer flex-1"
+                            value={selectedClassId}
+                            onChange={(e) => setSelectedClassId(e.target.value)}
+                        >
+                            <option value="all">All Divisions Combined</option>
+                            {classes.map(c => <option key={c.id} value={c.id}>{c.name} ({c.standard})</option>)}
+                        </select>
+                    </div>
+                
+                    <Link href="/admin/reports/certificates" className="inline-flex justify-center items-center px-6 py-3 bg-white border border-slate-200 text-slate-700 shadow-sm rounded-2xl font-bold hover:border-slate-300 hover:shadow-md transition-all active:scale-[0.98] w-full md:w-auto">
+                        <FileText size={18} className="mr-2 text-blue-600" />
+                        Generate Certificates
+                    </Link>
                 </div>
             </header>
 
@@ -189,8 +225,19 @@ export default function AdminReportsPage() {
                     {/* Class-wise Admissions Details Report */}
                     {selectedClassId !== "all" && (
                         <div className="mt-8 glass-card p-10 rounded-[3rem] bg-white shadow-xl border border-white">
-                            <h3 className="text-2xl font-bold mb-2">Class Admission Report</h3>
-                            <p className="text-slate-500 font-medium mb-8">Detailed view of students enrolled in the currently selected class.</p>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                                <div>
+                                    <h3 className="text-2xl font-bold mb-2">Class Admission Report</h3>
+                                    <p className="text-slate-500 font-medium">Detailed view of students enrolled in the currently selected class.</p>
+                                </div>
+                                <button
+                                    onClick={handleExportCSV}
+                                    className="inline-flex justify-center w-full md:w-auto items-center px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                                >
+                                    <Download size={18} className="mr-2" />
+                                    Export CSV Data
+                                </button>
+                            </div>
                             
                             <div className="overflow-x-auto rounded-3xl border border-slate-100">
                                 <table className="w-full text-left">

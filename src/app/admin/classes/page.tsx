@@ -11,6 +11,7 @@ interface ClassInfo {
     id?: string;
     name: string; // e.g. Division A
     standard: '11th' | '12th';
+    academicYear?: string;
     createdAt?: any;
 }
 
@@ -18,7 +19,7 @@ export default function AdminClassesPage() {
     const [classes, setClasses] = useState<ClassInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [newClass, setNewClass] = useState({ name: "", standard: '11th' as '11th' | '12th' });
+    const [newClass, setNewClass] = useState({ name: "", standard: '11th' as '11th' | '12th', academicYear: "2024-2025" });
 
     useEffect(() => {
         const q = query(collection(db, "classes"));
@@ -40,7 +41,7 @@ export default function AdminClassesPage() {
                 ...newClass,
                 createdAt: serverTimestamp(),
             });
-            setNewClass({ name: "", standard: '11th' });
+            setNewClass({ name: "", standard: '11th', academicYear: "2024-2025" });
         } catch (error) {
             console.error("Error adding class:", error);
             alert("Error adding class");
@@ -110,6 +111,18 @@ export default function AdminClassesPage() {
                                     ))}
                                 </div>
                             </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Academic Year</label>
+                                <select
+                                    className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500/10 outline-none font-medium text-slate-700"
+                                    value={newClass.academicYear}
+                                    onChange={(e) => setNewClass({ ...newClass, academicYear: e.target.value })}
+                                >
+                                    <option value="2023-2024">2023-2024</option>
+                                    <option value="2024-2025">2024-2025</option>
+                                    <option value="2025-2026">2025-2026</option>
+                                </select>
+                            </div>
                             <button
                                 type="submit"
                                 disabled={saving}
@@ -149,7 +162,7 @@ export default function AdminClassesPage() {
                                         </button>
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900">{cls.name}</h3>
-                                    <p className="text-sm font-medium text-slate-400 mb-6">{cls.standard} Standard Division</p>
+                                    <p className="text-sm font-medium text-slate-400 mb-6">{cls.standard} Standard Division {cls.academicYear ? `(${cls.academicYear})` : ''}</p>
 
                                     <div className="flex items-center text-blue-600 space-x-2 text-xs font-bold uppercase tracking-widest">
                                         <GraduationCap size={14} />

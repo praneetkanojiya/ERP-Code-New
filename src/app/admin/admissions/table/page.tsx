@@ -154,6 +154,7 @@ export default function AdminBulkAdmissionsPage() {
                 className: selectedClass?.name || '',
                 courseId: selectedClass?.courseId || '',
                 courseName: selectedClass?.courseName || '',
+                academicYear: selectedClass?.academicYear || '',
                 updatedAt: serverTimestamp(),
             };
 
@@ -207,6 +208,7 @@ export default function AdminBulkAdmissionsPage() {
                     classId: selectedClassId,
                     className: selectedClass?.name || "",
                     currentClass: selectedClass?.standard || '11th',
+                    academicYear: (selectedClass as any)?.academicYear || '',
                     updatedAt: serverTimestamp(),
                     recordedByAdmin: true
                 };
