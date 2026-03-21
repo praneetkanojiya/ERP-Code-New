@@ -30,6 +30,61 @@ export interface AdmissionApplication {
     tenthBoard?: string;
     admissionDate?: string;
     marks?: Record<string, number>;
+
+    // Extended Admission Form Fields
+    // Office Use
+    formNo?: string;
+    amountPaid?: number;
+    receiptNo?: string;
+    paymentDate?: string;
+    feeTypeCategory?: string; // e.g. Paying, Free, Scholarship
+    casteCategory?: string;
+    medium?: string;
+    aadharNo?: string;
+    udiseNo?: string;
+    session?: string;
+
+    // Particulars
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    mothersName?: string;
+
+    // DOB
+    dobInWords?: string;
+
+    // Social
+    caste?: string;
+    category?: string;
+
+    // Family and Address
+    fatherName?: string;
+    localAddress?: string;
+    localPhone?: string;
+    permanentAddress?: string;
+    permanentPhone?: string;
+
+    // Academic & Other Context
+    subjectsOffered?: string;
+    motherTongue?: string;
+    bankAccountNo?: string;
+
+    // Previous Education
+    lastExamName?: string;
+    lastExamBoard?: string;
+    lastExamSchool?: string;
+    lastExamPassingDate?: string;
+    lastExamSeatNo?: string;
+    lastExamMarks?: string; // grade/total marks obtained
+    lastExamOutOf?: string;
+    lastExamSubjects?: string;
+
+    // Guardian Info
+    fatherOccupation?: string;
+    annualIncome?: string;
+
+    // Extra
+    gamesOrSports?: string;
 }
 
 export interface Transaction {
