@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, where, serverTimestamp, setDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
-import { GraduationCap, Save, Plus, Trash2, Loader2, Download, Table as TableIcon, Layers, Edit2, XCircle } from "lucide-react";
+import { GraduationCap, Save, Plus, Trash2, Loader2, Download, Table as TableIcon, Layers, Edit2, XCircle, Clock } from "lucide-react";
 import { COLLEGES_COURSES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -17,6 +17,7 @@ interface ClassInfo {
 
 export default function AdminBulkAdmissionsPage() {
     const [classes, setClasses] = useState<ClassInfo[]>([]);
+    const [selectedYear, setSelectedYear] = useState<string>("ALL");
     const [selectedClassId, setSelectedClassId] = useState<string>("");
     
     const getEmptyRow = (): Partial<AdmissionApplication> => ({
@@ -263,13 +264,33 @@ export default function AdminBulkAdmissionsPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                     <div className="flex items-center bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm w-full sm:w-64">
+                        <Clock className="text-slate-400 mr-3" size={18} />
+                        <select
+                            className="bg-transparent text-sm font-bold text-slate-900 outline-none w-full"
+                            value={selectedYear}
+                            onChange={(e) => {
+                                setSelectedYear(e.target.value);
+                                setSelectedClassId("");
+                            }}
+                        >
+                            <option value="ALL">All Academic Years</option>
+                            {Array.from(new Set(classes.map((c: any) => c.academicYear))).filter(Boolean).sort().map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm w-full sm:w-64">
                         <Layers className="text-slate-400 mr-3" size={18} />
                         <select
                             className="bg-transparent text-sm font-bold text-slate-900 outline-none w-full"
                             value={selectedClassId}
                             onChange={(e) => setSelectedClassId(e.target.value)}
                         >
-                            {classes.map(c => <option key={c.id} value={c.id}>{c.name} ({c.standard})</option>)}
+                            <option value="">-- Choose Class --</option>
+                            {classes
+                                .filter(c => selectedYear === "ALL" || (c as any).academicYear === selectedYear)
+                                .map(c => <option key={c.id} value={c.id}>{(c as any).standard} - {(c as any).academicYear} - {c.name}</option>)
+                            }
                         </select>
                     </div>
                     <button onClick={loadExistingStudents} disabled={loading} className="w-full sm:w-auto flex items-center px-6 py-3.5 bg-slate-200 text-slate-800 rounded-2xl text-sm font-bold shadow-sm hover:bg-slate-300 transition-all disabled:opacity-50">

@@ -127,7 +127,7 @@ export default function CertificatesPage() {
                                 }}
                             >
                                 <option value="all">All Classes</option>
-                                {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.standard} - {c.academicYear} - {c.name}</option>)}
                             </select>
                         </div>
                         <div className="md:col-span-2">
@@ -198,123 +198,128 @@ export default function CertificatesPage() {
                         <>
                             {/* ================== BONAFIDE CERTIFICATE ================== */}
                             {selectedType === "BONAFIDE" && (
-                                <div className="border-[4px] border-black rounded-[2rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
-                                    <div className="flex justify-between items-center w-full mt-4 mb-10 px-4">
-                                        <div className="text-lg font-bold flex items-center">
-                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-16 ml-2 text-red-600 font-bold border-b border-dashed border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                <div className="border-[6px] border-black rounded-[2rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
+                                    <div className="flex justify-between items-center w-full mt-2 mb-8 px-4">
+                                        <div className="text-xl font-bold flex items-center">
+                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-24 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
                                         </div>
-                                        <div className="text-lg font-bold flex items-center">
-                                            Date : <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-28 ml-2 font-bold border-b border-dashed border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                        <div className="text-xl font-bold flex items-center">
+                                            Date:- <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-40 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
                                         </div>
                                     </div>
                                     
-                                    <h1 className="text-[1.35rem] font-black uppercase mb-3">Shree Sadguru Gajanan Bahuuddeshiya Sanstha's</h1>
-                                    <h2 className="text-[2.5rem] font-black uppercase mb-4 tracking-wide leading-none text-gray-900 border-b-2 border-black inline-block pb-2 mx-auto">Laxmilal Kanojiya</h2>
-                                    <h3 className="text-[1.1rem] font-bold uppercase mb-16 leading-relaxed">Arts, Commerce & Science Jr. College<br/><span className="text-[0.95rem]">Chankapur, Khaperkheda, Dist. Nagpur</span></h3>
+                                    <h1 className="text-[1.2rem] font-bold uppercase mb-2">Shree Sadguru Gajanan Bahuuddhesiya Sanstha’s</h1>
+                                    <h2 className="text-[2rem] font-black uppercase mb-2 leading-tight">LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE</h2>
+                                    <h3 className="text-[1.8rem] font-bold uppercase mb-12 tracking-wider">JUNIOR COLLEGE, CHANKAPUR</h3>
                                     
-                                    <div className="inline-block border-[5px] border-black border-double px-10 py-4 mb-20 shadow-sm mx-auto">
-                                        <h4 className="text-[2rem] font-black uppercase tracking-[0.2em]">Bonafide</h4>
-                                    </div>
+                                    <h4 className="text-[2.2rem] font-black uppercase tracking-[0.2em] underline underline-offset-[12px] decoration-2 mb-16 italic">Bonafide Certificate</h4>
 
-                                    <div className="text-justify text-xl font-medium leading-[3.5rem] tracking-wide px-8 mt-4 flex-1">
-                                        This is to certify that {boyOrGirl}{" "} 
-                                        <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-[2px] border-dashed border-black px-4 text-center outline-none bg-transparent min-w-[300px]" readOnly />
-                                        <br/> is/was a bonafied student of this college studying in <input type="text" defaultValue={selectedStudent?.className || ''} className="font-bold border-b-[2px] border-dashed border-black px-2 text-center outline-none bg-transparent w-48" /> class during the year 20<input type="text" defaultValue={yearStartShort} className="font-bold border-b-[2px] border-dashed border-black px-1 text-center outline-none bg-transparent min-w-[30px] w-auto max-w-[40px]" /> - 20<input type="text" defaultValue={yearEndShort} className="font-bold border-b-[2px] border-dashed border-black px-1 text-center outline-none bg-transparent min-w-[30px] w-auto max-w-[40px]" />.
+                                    <div className="text-justify text-[1.4rem] font-medium leading-[4.2rem] px-8 mt-4 flex-1">
+                                        This is to certify that Mr./Mrs./Miss.{" "} 
+                                        <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-2 border-black px-4 text-center outline-none bg-transparent min-w-[350px]" readOnly />
+                                        <br/> is/was a bonafied student of this college studying in <input type="text" defaultValue={selectedStudent?.className || ''} className="font-bold border-b-2 border-black px-2 text-center outline-none bg-transparent w-64" /> class during the year <input type="text" defaultValue={selectedStudent?.academicYear || ''} className="font-bold border-b-2 border-black px-2 text-center outline-none bg-transparent w-48" />.
                                         
-                                        <div className="mt-8 indent-12">
-                                            {hisHer} Date of Birth as per College record is <input type="text" defaultValue={selectedStudent?.dateOfBirth || ''} className="font-bold border-b-[2px] border-dashed border-black px-2 text-center outline-none bg-transparent w-40" />.
+                                        <div className="mt-8">
+                                            His/Her Date of Birth as per College record is <input type="text" defaultValue={selectedStudent?.dateOfBirth || ''} className="font-bold border-b-2 border-black px-2 text-center outline-none bg-transparent w-48" />.
                                         </div>
-                                        <div className="mt-2 indent-12">
-                                            While {heShe.toLowerCase()} is/was in this college, {hisHer.toLowerCase()} conduct and character found to be good.
+                                        <div className="mt-4">
+                                            While he/she is/was in this college, his / her conduct and character found to be good.
                                         </div>
                                     </div>
 
                                     <div className="flex justify-between items-end mt-auto px-12 mb-8">
-                                        <div className="text-xl font-bold italic tracking-widest text-slate-700">Seal</div>
-                                        <div className="text-xl font-bold uppercase tracking-widest border-t border-black pt-2 w-48 text-center mt-12">Principal</div>
+                                        <div className="text-2xl font-black uppercase tracking-widest">Seal</div>
+                                        <div className="text-2xl font-bold uppercase tracking-widest border-t-2 border-black pt-2 w-64 text-center">Principal</div>
                                     </div>
                                 </div>
                             )}
 
                             {/* ================== CHARACTER CERTIFICATE ================== */}
                             {selectedType === "CHARACTER" && (
-                                <div className="border-[4px] border-black rounded-[3rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
-                                    <div className="flex justify-between items-center w-full mt-6 mb-16 px-6">
-                                        <div className="text-lg font-bold flex items-center">
-                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-16 ml-2 font-bold border-b border-dashed border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                <div className="border-[6px] border-black rounded-[2rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
+                                    <div className="flex justify-between items-center w-full mt-2 mb-8 px-6">
+                                        <div className="text-xl font-bold flex items-center">
+                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-24 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
                                         </div>
-                                        <div className="text-lg font-bold flex items-center">
-                                            Date : <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-28 ml-2 font-bold border-b border-dashed border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                        <div className="text-xl font-bold flex items-center">
+                                            Date:- <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-40 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
                                         </div>
                                     </div>
                                     
-                                    <h2 className="text-[1.8rem] font-black uppercase leading-tight mb-20 tracking-wider">LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, CHANKAPUR.</h2>
+                                    <h2 className="text-[2rem] font-black uppercase leading-tight mb-2 tracking-wider">LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE</h2>
+                                    <h3 className="text-[1.8rem] font-bold uppercase mb-12 tracking-wider">JUNIOR COLLEGE, CHANKAPUR</h3>
                                     
-                                    <h4 className="text-[1.8rem] font-bold uppercase tracking-[0.3em] underline underline-offset-[16px] decoration-4 mb-24">Character Certificate</h4>
+                                    <h4 className="text-[2.2rem] font-bold uppercase tracking-[0.2em] underline underline-offset-[12px] decoration-2 mb-20 italic">CHARACTER CERTIFICATE</h4>
 
-                                    <div className="text-justify text-[1.3rem] font-medium leading-[4rem] px-8 flex-1">
-                                        This is to certify that {boyOrGirl} <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-[2px] border-black px-4 text-center outline-none bg-transparent min-w-[300px]" readOnly /> was a pupil of the LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, Chankapur and that {heShe.toLowerCase()} has passed H.S.S.C Examination of March/Oct <input type="text" defaultValue={yearEndFull} className="font-bold border-b-[2px] border-black px-2 text-center outline-none bg-transparent w-24" />.
+                                    <div className="text-justify text-[1.4rem] font-medium leading-[4.2rem] px-8 flex-1">
+                                        This is to certify that Master/Ms <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-2 border-black px-4 text-center outline-none bg-transparent min-w-[350px]" readOnly /> was a pupil of the LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, Chankapur and that he/she has passed H.S.S.C Examination of March/Oct <input type="text" defaultValue={yearEndFull} className="font-bold border-b-2 border-black px-2 text-center outline-none bg-transparent w-24" />.
                                         
-                                        <div className="mt-12 indent-12">
-                                            {heShe} is a disciplined and obedient student and has a <input type="text" value={editableFields.characterQuality} onChange={(e) => updateField('characterQuality', e.target.value)} className="font-bold border-b-[2px] border-black px-2 text-center outline-none bg-transparent w-64" />.
+                                        <div className="mt-8">
+                                            He/She is a disciplined and obedient student and has a <input type="text" value={editableFields.characterQuality} onChange={(e) => updateField('characterQuality', e.target.value)} className="font-bold border-b-2 border-black px-2 text-center outline-none bg-transparent w-64" />.
                                         </div>
-                                        <div className="mt-4 indent-12">
-                                            I wish {hisHer.toLowerCase()} success in {hisHer.toLowerCase()} future life.
+                                        <div className="mt-4">
+                                            I wish him/her success in his/her future life.
                                         </div>
                                     </div>
 
                                     <div className="flex justify-end items-end mt-auto px-16 mb-8">
-                                        <div className="text-xl font-bold uppercase tracking-widest border-t-2 border-black pt-2 w-64 text-center">Principal</div>
+                                        <div className="text-2xl font-bold uppercase tracking-widest border-t-2 border-black pt-2 w-64 text-center">Principal</div>
                                     </div>
                                 </div>
                             )}
 
                             {/* ================== ATTEMPT CERTIFICATE ================== */}
                             {selectedType === "ATTEMPT" && (
-                                <div className="border-[4px] border-black rounded-[3rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
-                                    <div className="flex justify-between items-center w-full mt-6 mb-16 px-6">
-                                        <div className="text-lg font-bold flex items-center">
-                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-16 ml-2 font-bold border-b border-dashed border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                <div className="border-[6px] border-black rounded-[2rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
+                                    <div className="flex justify-between items-center w-full mt-2 mb-8 px-6">
+                                        <div className="text-xl font-bold flex items-center">
+                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-24 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
                                         </div>
-                                        <div className="text-lg font-bold flex items-center">
-                                            Date : <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-28 ml-2 font-bold border-b border-dashed border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                        <div className="text-xl font-bold flex items-center">
+                                            Date:- <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-40 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
                                         </div>
                                     </div>
                                     
-                                    <h2 className="text-[1.8rem] font-black uppercase leading-tight mb-20 tracking-wider">LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, CHANKAPUR.</h2>
+                                    <h2 className="text-[2rem] font-black uppercase leading-tight mb-2 tracking-wider">LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE</h2>
+                                    <h3 className="text-[1.8rem] font-bold uppercase mb-12 tracking-wider">JUNIOR COLLEGE, CHANKAPUR</h3>
                                     
-                                    <h4 className="text-[1.8rem] font-bold uppercase tracking-[0.3em] underline underline-offset-[16px] decoration-4 mb-24">Attempt Certificate</h4>
+                                    <h4 className="text-[2.2rem] font-bold uppercase tracking-[0.2em] underline underline-offset-[12px] decoration-2 mb-20 italic">Attempt Certificate</h4>
 
-                                    <div className="text-justify text-[1.3rem] font-medium leading-[4rem] px-8 flex-1">
-                                        This is to certify that {boyOrGirl} <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-[2px] border-black px-4 text-center outline-none bg-transparent min-w-[300px]" readOnly /> was a pupil of the LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, Chankapur and that {heShe.toLowerCase()} has passed H.S.S.C Examination of March/Oct <input type="text" defaultValue={yearEndFull} className="font-bold border-b-[2px] border-black px-2 text-center outline-none bg-transparent w-24" /> in <input type="text" value={editableFields.attemptNumber} onChange={(e) => updateField('attemptNumber', e.target.value)} className="font-black italic border-b-[2px] border-black px-2 text-center outline-none bg-transparent w-48" />.
+                                    <div className="text-justify text-[1.4rem] font-medium leading-[4.2rem] px-8 flex-1">
+                                        This is to certify that Master/Ms <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-2 border-black px-4 text-center outline-none bg-transparent min-w-[350px]" readOnly /> was a Pupil of the LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, Chankapur and that he/she has passed H.S.S.C Examination of March/Oct <input type="text" defaultValue={yearEndFull} className="font-bold border-b-2 border-black px-2 text-center outline-none bg-transparent w-24" /> in <input type="text" value={editableFields.attemptNumber} onChange={(e) => updateField('attemptNumber', e.target.value)} className="font-black italic border-b-2 border-black px-2 text-center outline-none bg-transparent w-48" />.
                                     </div>
 
                                     <div className="flex justify-end items-end mt-auto px-16 mb-8">
-                                        <div className="text-xl font-bold uppercase tracking-widest border-t-2 border-black pt-2 w-64 text-center">Principal</div>
+                                        <div className="text-2xl font-bold uppercase tracking-widest border-t-2 border-black pt-2 w-64 text-center">Principal</div>
                                     </div>
                                 </div>
                             )}
 
 
-                            {/* Fix typo switch case for ATTENDANCE since condition above said ATTANCE */}
+                            {/* ================== ATTENDANCE CERTIFICATE ================== */}
                             {selectedType === "ATTENDANCE" && (
-                                <div className="text-center relative w-full h-full flex flex-col justify-start pt-24 bg-white text-slate-900 border border-transparent">
-                                    <h4 className="text-[2.2rem] font-black uppercase tracking-widest underline underline-offset-[16px] decoration-[5px] mb-32">Attendance Certificate</h4>
+                                <div className="border-[6px] border-black rounded-[2rem] p-12 text-center relative w-full h-full flex flex-col justify-start">
+                                    <div className="flex justify-between items-center w-full mt-2 mb-8 px-6">
+                                        <div className="text-xl font-bold flex items-center">
+                                            No. <input type="text" value={editableFields.bonafideNo} onChange={(e) => updateField('bonafideNo', e.target.value)} className="w-24 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                        </div>
+                                        <div className="text-xl font-bold flex items-center">
+                                            Date:- <input type="text" value={editableFields.certificateDate} onChange={(e) => updateField('certificateDate', e.target.value)} className="w-40 ml-2 font-bold border-b-2 border-slate-300 outline-none print:border-none text-center bg-transparent" />
+                                        </div>
+                                    </div>
 
-                                    <div className="text-justify text-[1.6rem] font-medium leading-[4.5rem] px-12 flex-1 mt-10">
-                                        This is to certify that {boyOrGirl} <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-[3px] border-black focus:outline-none min-w-[400px] text-center bg-transparent" readOnly /><br/>
-                                        <div className="mt-8"></div>
-                                        with general register number <input type="text" defaultValue={selectedStudent?.rollNumber || ''} className="font-bold border-b-[3px] border-black focus:outline-none w-64 text-center bg-transparent" /><br/>
-                                        <div className="mt-8"></div>
-                                        is/was a Bonafide student of this college studying in <input type="text" defaultValue={selectedStudent?.className || ''} className="font-bold border-b-[3px] border-black focus:outline-none w-80 text-center bg-transparent" /><br/>
-                                        <div className="mt-8"></div>
-                                        and {hisHer.toLowerCase()} attendance is/was <input type="text" value={editableFields.attendancePercent} onChange={(e) => updateField('attendancePercent', e.target.value)} className="font-extrabold border-b-[3px] border-black focus:outline-none w-24 text-center text-[2rem] bg-transparent" /> % for the<br/>
-                                        <div className="mt-8"></div> 
-                                        academic year 20<input type="text" defaultValue={yearStartShort} className="font-bold border-b-[3px] border-black focus:outline-none w-16 text-center bg-transparent" /> - 20<input type="text" defaultValue={yearEndShort} className="font-bold border-b-[3px] border-black focus:outline-none w-16 text-center bg-transparent" />.
+                                    <h2 className="text-[2rem] font-black uppercase leading-tight mb-2 tracking-wider">LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE</h2>
+                                    <h3 className="text-[1.8rem] font-bold uppercase mb-12 tracking-wider">JUNIOR COLLEGE, CHANKAPUR</h3>
+                                    
+                                    <h4 className="text-[2.2rem] font-bold uppercase tracking-[0.2em] underline underline-offset-[12px] decoration-2 mb-20 italic">Attendance Certificate</h4>
+
+                                    <div className="text-justify text-[1.4rem] font-medium leading-[4.5rem] px-12 flex-1 mt-10">
+                                        This is to certify that Mr./Miss./Mrs. <input type="text" value={fullName} onChange={() => {}} className="font-bold border-b-2 border-black focus:outline-none min-w-[350px] text-center bg-transparent" readOnly /><br/>
+                                        With general register number, <input type="text" defaultValue={selectedStudent?.rollNumber || ''} className="font-bold border-b-2 border-black focus:outline-none w-48 text-center bg-transparent" /> is/was a Bonafide student of this college studying in <input type="text" defaultValue={selectedStudent?.className || ''} className="font-bold border-b-2 border-black focus:outline-none w-64 text-center bg-transparent" /> and his/her attendance is/was <input type="text" value={editableFields.attendancePercent} onChange={(e) => updateField('attendancePercent', e.target.value)} className="font-bold border-b-2 border-black focus:outline-none w-24 text-center text-[1.8rem] bg-transparent" /> % for the academic year <input type="text" defaultValue={selectedStudent?.academicYear || ''} className="font-bold border-b-2 border-black focus:outline-none w-48 text-center bg-transparent" />.
                                     </div>
                                     
                                     <div className="flex justify-end items-end mt-auto px-20 pb-16">
-                                        <div className="text-2xl font-bold uppercase tracking-widest border-t-[3px] border-black pt-4 w-64 text-center">Principal</div>
+                                        <div className="text-2xl font-bold uppercase tracking-widest border-t-2 border-black pt-2 w-64 text-center">Principal</div>
                                     </div>
                                 </div>
                             )}

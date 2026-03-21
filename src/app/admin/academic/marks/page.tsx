@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, setDoc, doc, onSnapshot, serverTimestamp } from "firebase/firestore";
-import { GraduationCap, Save, Search, Loader2, Award, ArrowUpCircle, BookOpen, Layers } from "lucide-react";
+import { GraduationCap, Save, Search, Loader2, Award, ArrowUpCircle, BookOpen, Layers, Clock } from "lucide-react";
 import { AdmissionApplication } from "@/types";
 import { COLLEGES_COURSES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ interface ClassInfo {
 
 export default function AdminAcademicMarksPage() {
     const [classes, setClasses] = useState<ClassInfo[]>([]);
+    const [selectedYear, setSelectedYear] = useState<string>("ALL");
     const [selectedClassId, setSelectedClassId] = useState<string>("");
     const [students, setStudents] = useState<AdmissionApplication[]>([]);
     const [search, setSearch] = useState("");
@@ -142,16 +143,37 @@ export default function AdminAcademicMarksPage() {
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">Academic Marks Portal</h1>
                     <p className="text-slate-500 font-medium">Record subject marks and promote students to the next standard.</p>
 
-                    <div className="flex items-center space-x-3 mt-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-                        <Layers className="text-slate-400 ml-3" size={18} />
-                        <select
-                            className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-8 cursor-pointer"
-                            value={selectedClassId}
-                            onChange={(e) => setSelectedClassId(e.target.value)}
-                        >
-                            <option value="">Select Class</option>
-                            {classes.map(c => <option key={c.id} value={c.id}>{c.name} ({c.standard})</option>)}
-                        </select>
+                    <div className="flex items-center space-x-3 mt-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-wrap gap-2">
+                        <div className="flex items-center space-x-2 px-3 border-r border-slate-100">
+                            <Clock className="text-slate-400" size={18} />
+                            <select
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-6 cursor-pointer"
+                                value={selectedYear}
+                                onChange={(e) => {
+                                    setSelectedYear(e.target.value);
+                                    setSelectedClassId("");
+                                }}
+                            >
+                                <option value="ALL">All Academic Years</option>
+                                {Array.from(new Set(classes.map((c: any) => c.academicYear))).filter(Boolean).sort().map(y => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex items-center space-x-2 pl-2">
+                            <Layers className="text-slate-400" size={18} />
+                            <select
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-8 cursor-pointer"
+                                value={selectedClassId}
+                                onChange={(e) => setSelectedClassId(e.target.value)}
+                            >
+                                <option value="">Select Class</option>
+                                {classes
+                                    .filter(c => selectedYear === "ALL" || (c as any).academicYear === selectedYear)
+                                    .map(c => <option key={c.id} value={c.id}>{(c as any).standard} - {(c as any).academicYear} - {c.name}</option>)
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div className="relative w-full md:w-80">
@@ -279,9 +301,11 @@ export default function AdminAcademicMarksPage() {
                                                     onChange={(e) => handlePromoteClassChange(student.id!, e.target.value)}
                                                 >
                                                     <option value="">-- Choose 12th Division --</option>
-                                                    {classes.filter(c => c.standard === '12th' || c.name.includes('12')).map(c => (
-                                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                                    ))}
+                                                    {classes
+                                                        .filter(c => (c.standard === '12th' || c.name.includes('12')) && (selectedYear === "ALL" || (c as any).academicYear === selectedYear))
+                                                        .map(c => (
+                                                            <option key={c.id} value={c.id}>{(c as any).standard} - {(c as any).academicYear} - {c.name}</option>
+                                                        ))}
                                                 </select>
                                             </div>
                                         )}

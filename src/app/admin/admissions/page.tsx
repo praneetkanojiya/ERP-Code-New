@@ -14,6 +14,7 @@ export default function AdminAdmissionsPage() {
     const [filterStatus, setFilterStatus] = useState<string>("ALL");
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [classes, setClasses] = useState<any[]>([]);
+    const [selectedYear, setSelectedYear] = useState<string>("ALL");
     const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
     const [editingApp, setEditingApp] = useState<AdmissionApplication | null>(null);
     const [editingDetails, setEditingDetails] = useState<any>({
@@ -140,9 +141,13 @@ export default function AdminAdmissionsPage() {
             app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (app.rollNumber && app.rollNumber.includes(searchTerm));
         const matchesStatus = filterStatus === "ALL" || app.status === filterStatus;
+        const matchesYear = selectedYear === "ALL" || app.academicYear === selectedYear;
         const matchesClass = selectedClassId === "ALL" || app.classId === selectedClassId;
-        return matchesSearch && matchesStatus && matchesClass;
+        return matchesSearch && matchesStatus && matchesYear && matchesClass;
     });
+
+    const years = Array.from(new Set(classes.map(c => c.academicYear))).filter(Boolean).sort();
+    const filteredClasses = selectedYear === "ALL" ? classes : classes.filter(c => c.academicYear === selectedYear);
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
@@ -179,14 +184,28 @@ export default function AdminAdmissionsPage() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
                         <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-1 w-full sm:w-auto">
+                            <Clock className="text-slate-400 ml-3 shrink-0" size={18} />
+                            <select
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-4 py-1 w-full cursor-pointer"
+                                value={selectedYear}
+                                onChange={(e) => {
+                                    setSelectedYear(e.target.value);
+                                    setSelectedClassId("ALL"); // Reset class when year changes
+                                }}
+                            >
+                                <option value="ALL">All Academic Years</option>
+                                {years.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-1 w-full sm:w-auto">
                             <Layers className="text-slate-400 ml-3 shrink-0" size={18} />
                             <select
                                 className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-4 py-1 w-full cursor-pointer"
                                 value={selectedClassId}
                                 onChange={(e) => setSelectedClassId(e.target.value)}
                             >
-                                <option value="ALL">All Classes & Divisions</option>
-                                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                <option value="ALL">All Divisions</option>
+                                {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.standard} - {c.academicYear} - {c.name}</option>)}
                             </select>
                         </div>
                         <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-1 w-full sm:w-auto">
@@ -266,7 +285,7 @@ export default function AdminAdmissionsPage() {
                                     >
                                         <option value="">-- Assign a Class --</option>
                                         {classes.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name} {c.academicYear ? `(${c.academicYear})` : ''}</option>
+                                            <option key={c.id} value={c.id}>{c.standard} - {c.academicYear} - {c.name}</option>
                                         ))}
                                     </select>
                                 </div>
