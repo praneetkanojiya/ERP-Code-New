@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
-import { GraduationCap, Search, CheckCircle, XCircle, Clock, Filter, FileText, Loader2, Layers, Edit2 } from "lucide-react";
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { GraduationCap, Search, CheckCircle, XCircle, Clock, Filter, FileText, Loader2, Layers, Edit2, Trash2 } from "lucide-react";
 import { AdmissionApplication } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +57,20 @@ export default function AdminAdmissionsPage() {
         } catch (error) {
             console.error("Error updating status:", error);
             alert("Failed to update status.");
+        } finally {
+            setUpdatingId(null);
+        }
+    };
+
+    const deleteApplication = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to completely delete the application for ${name}? This action cannot be undone.`)) return;
+        
+        setUpdatingId(id);
+        try {
+            await deleteDoc(doc(db, "admissions", id));
+        } catch (error) {
+            console.error("Error deleting application:", error);
+            alert("Failed to delete application.");
         } finally {
             setUpdatingId(null);
         }
@@ -237,6 +251,12 @@ export default function AdminAdmissionsPage() {
                                                             </button>
                                                         </>
                                                     )}
+                                                    <button
+                                                        onClick={() => deleteApplication(app.id!, app.studentName)}
+                                                        disabled={updatingId === app.id}
+                                                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50" title="Delete Student">
+                                                        {updatingId === app.id ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={18} />}
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
