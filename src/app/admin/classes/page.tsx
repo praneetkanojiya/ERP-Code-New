@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, onSnapshot, doc, setDoc, deleteDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { Plus, Trash2, Loader2, ArrowLeft, Layers, GraduationCap } from "lucide-react";
+import { Plus, Trash2, Loader2, ArrowLeft, Layers, GraduationCap, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ export default function AdminClassesPage() {
     const [classes, setClasses] = useState<ClassInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [newClass, setNewClass] = useState({ name: "", standard: '11th' as '11th' | '12th', academicYear: "2024-2025" });
 
     useEffect(() => {
@@ -37,14 +38,20 @@ export default function AdminClassesPage() {
 
         setSaving(true);
         try {
-            await addDoc(collection(db, "classes"), {
-                ...newClass,
-                createdAt: serverTimestamp(),
-            });
+            if (editingId) {
+                const { updateDoc } = await import("firebase/firestore");
+                await updateDoc(doc(db, "classes", editingId), { ...newClass, updatedAt: serverTimestamp() });
+                setEditingId(null);
+            } else {
+                await addDoc(collection(db, "classes"), {
+                    ...newClass,
+                    createdAt: serverTimestamp(),
+                });
+            }
             setNewClass({ name: "", standard: '11th', academicYear: "2024-2025" });
         } catch (error) {
-            console.error("Error adding class:", error);
-            alert("Error adding class");
+            console.error("Error saving class:", error);
+            alert("Error saving class");
         } finally {
             setSaving(false);
         }
@@ -77,7 +84,7 @@ export default function AdminClassesPage() {
                     <div className="glass-card bg-white rounded-[2.5rem] shadow-xl border border-white p-8 sticky top-24">
                         <h2 className="text-xl font-bold mb-6 flex items-center">
                             <Plus className="mr-2 text-blue-600" size={20} />
-                            Add New Division
+                            {editingId ? "Edit Division" : "Add New Division"}
                         </h2>
                         <form onSubmit={handleAddClass} className="space-y-6">
                             <div>
@@ -113,23 +120,36 @@ export default function AdminClassesPage() {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Academic Year</label>
-                                <select
+                                <input
+                                    type="text"
+                                    placeholder="e.g. 2024-2025"
                                     className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500/10 outline-none font-medium text-slate-700"
                                     value={newClass.academicYear}
                                     onChange={(e) => setNewClass({ ...newClass, academicYear: e.target.value })}
-                                >
-                                    <option value="2023-2024">2023-2024</option>
-                                    <option value="2024-2025">2024-2025</option>
-                                    <option value="2025-2026">2025-2026</option>
-                                </select>
+                                    required
+                                />
                             </div>
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="w-full py-4 premium-gradient text-white font-bold rounded-2xl shadow-xl hover:shadow-blue-500/25 transition-all flex items-center justify-center disabled:opacity-50"
-                            >
-                                {saving ? <Loader2 className="animate-spin" size={20} /> : "Create Division"}
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex-1 py-4 premium-gradient text-white font-bold rounded-2xl shadow-xl hover:shadow-blue-500/25 transition-all flex items-center justify-center disabled:opacity-50"
+                                >
+                                    {saving ? <Loader2 className="animate-spin" size={20} /> : (editingId ? "Update Division" : "Create Division")}
+                                </button>
+                                {editingId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingId(null);
+                                            setNewClass({ name: "", standard: '11th', academicYear: "2024-2025" });
+                                        }}
+                                        className="px-6 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -154,12 +174,26 @@ export default function AdminClassesPage() {
                                         )}>
                                             {cls.standard === '11th' ? '11' : '12'}
                                         </div>
-                                        <button
-                                            onClick={() => deleteClass(cls.id!)}
-                                            className="text-slate-200 hover:text-rose-500 transition-colors p-2"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div className="flex space-x-1">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingId(cls.id!);
+                                                    setNewClass({ name: cls.name, standard: cls.standard, academicYear: cls.academicYear || "2024-2025" });
+                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                }}
+                                                className="text-blue-400 hover:text-blue-600 transition-colors p-2 bg-blue-50 hover:bg-blue-100 rounded-xl"
+                                                title="Edit Class"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => deleteClass(cls.id!)}
+                                                className="text-rose-400 hover:text-rose-600 transition-colors p-2 bg-rose-50 hover:bg-rose-100 rounded-xl"
+                                                title="Delete Class"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900">{cls.name}</h3>
                                     <p className="text-sm font-medium text-slate-400 mb-6">{cls.standard} Standard Division {cls.academicYear ? `(${cls.academicYear})` : ''}</p>
