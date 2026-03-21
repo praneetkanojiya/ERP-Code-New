@@ -77,36 +77,54 @@ export default function AdminAcademicMarksPage() {
         setStudents(updated);
     };
 
-    const getSubjectsForStudent = (student: AdmissionApplication) => {
+    const handlePromoteClassChange = (studentId: string, newClassId: string) => {
+        const updated = [...students];
+        const index = updated.findIndex((s: any) => s.id === studentId);
+        if (index === -1) return;
+        updated[index].promoteToClassId = newClassId;
+        setStudents(updated);
+    };
+
+    const getSubjectsForStudent = (student: any) => {
         if (student.subjectsOffered && student.subjectsOffered.trim().length > 0) {
-            return student.subjectsOffered.split(',').map(s => s.trim()).filter(Boolean);
+            return student.subjectsOffered.split(',').map((s: string) => s.trim()).filter(Boolean);
         }
         const course = COLLEGES_COURSES.find(c => c.id === student.courseId);
         return course?.subjects || ["English", "Mathematics", "Science", "Social Studies"];
     };
 
-    const saveMarks = async (student: AdmissionApplication) => {
+    const saveMarks = async (student: any) => {
         setSavingId(student.id!);
         try {
             const subjects = getSubjectsForStudent(student);
-            const isPassed = subjects.length > 0 ? subjects.every(sub => (student.marks?.[sub] || 0) >= 35) : false; // 35 is passing
+            const isPassed = subjects.length > 0 ? subjects.every((sub: string) => (student.marks?.[sub] || 0) >= 35) : false; // 35 is passing
             
-            let nextClass = student.currentClass || '11th';
-            if (isPassed && student.currentClass === '11th' && !student.holdPromotion) {
-                nextClass = '12th';
-            }
-
-            await setDoc(doc(db, "admissions", student.id!), {
+            let dataToUpdate: any = {
                 ...student,
-                currentClass: nextClass,
                 updatedAt: serverTimestamp(),
-            });
+            };
 
-            if (nextClass === '12th' && student.currentClass === '11th') {
-                alert(`${student.studentName} PASSED and has been PROMOTED to 12th Standard!`);
-            } else {
-                alert(`Details and Marks updated for ${student.studentName}.`);
+            let promoMessage = `Details and Marks updated for ${student.studentName}.`;
+
+            if (isPassed && !student.holdPromotion && student.promoteToClassId) {
+                const targetClass: any = classes.find(c => c.id === student.promoteToClassId);
+                if (targetClass) {
+                    dataToUpdate.classId = targetClass.id;
+                    dataToUpdate.className = targetClass.name;
+                    dataToUpdate.courseId = targetClass.courseId;
+                    dataToUpdate.courseName = targetClass.courseName;
+                    dataToUpdate.currentClass = targetClass.standard || '12th';
+                    promoMessage = `${student.studentName} PASSED and has been PROMOTED to ${targetClass.name}!`;
+                }
+            } else if (isPassed && !student.holdPromotion && !student.promoteToClassId && student.currentClass === '11th') {
+                dataToUpdate.currentClass = '12th';
             }
+
+            delete dataToUpdate.promoteToClassId;
+
+            await setDoc(doc(db, "admissions", student.id!), dataToUpdate);
+
+            alert(promoMessage);
         } catch (error) {
             console.error(error);
             alert("Error updating marks");
@@ -162,9 +180,9 @@ export default function AdminAcademicMarksPage() {
                 </div>
             ) : (
                 <div className="space-y-8">
-                    {filtered.map((student) => {
+                    {filtered.map((student: any) => {
                         const subjects = getSubjectsForStudent(student);
-                        const isPassed = subjects.length > 0 ? subjects.every(sub => (student.marks?.[sub] || 0) >= 35) : false;
+                        const isPassed = subjects.length > 0 ? subjects.every((sub: string) => (student.marks?.[sub] || 0) >= 35) : false;
 
                         return (
                             <div key={student.id} className="glass-card bg-white rounded-[2.5rem] shadow-xl border border-white p-8 overflow-hidden group hover:border-blue-200 transition-all">
@@ -221,7 +239,7 @@ export default function AdminAcademicMarksPage() {
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                    {subjects.map(sub => (
+                                    {subjects.map((sub: string) => (
                                         <div key={sub} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 leading-tight h-5 overflow-hidden">{sub}</label>
                                             <input
@@ -241,14 +259,32 @@ export default function AdminAcademicMarksPage() {
                                     ))}
                                 </div>
 
-                                <div className="mt-8 flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        <Award className={cn("inline-block", isPassed ? "text-emerald-500" : "text-slate-300")} size={20} />
-                                        <span className="text-sm font-bold text-slate-500">
-                                            Status: <span className={cn(isPassed ? "text-emerald-600" : "text-rose-500")}>
-                                                {isPassed ? (student.holdPromotion ? "QUALIFIED (HELD)" : "QUALIFIED FOR PROMOTION") : "REPEATER / INCOMPLETE"}
+                                <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                    <div className="flex flex-col space-y-3">
+                                        <div className="flex items-center space-x-2">
+                                            <Award className={cn("inline-block", isPassed ? "text-emerald-500" : "text-slate-300")} size={20} />
+                                            <span className="text-sm font-bold text-slate-500">
+                                                Status: <span className={cn(isPassed ? "text-emerald-600" : "text-rose-500")}>
+                                                    {isPassed ? (student.holdPromotion ? "QUALIFIED (HELD)" : "QUALIFIED FOR PROMOTION") : "REPEATER / INCOMPLETE"}
+                                                </span>
                                             </span>
-                                        </span>
+                                        </div>
+                                        
+                                        {isPassed && !student.holdPromotion && (
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                                <label className="text-xs font-bold text-emerald-800 whitespace-nowrap">Promote to Division:</label>
+                                                <select 
+                                                    className="px-3 py-2 rounded-lg border border-emerald-200 text-sm outline-none bg-white text-emerald-900 font-semibold w-full sm:w-auto"
+                                                    value={student.promoteToClassId || ''}
+                                                    onChange={(e) => handlePromoteClassChange(student.id!, e.target.value)}
+                                                >
+                                                    <option value="">-- Choose 12th Division --</option>
+                                                    {classes.filter(c => c.standard === '12th' || c.name.includes('12')).map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="text-right">
                                         <span className="text-xs text-slate-400 font-medium italic">Auto-promotes to 12th if all subjects {'>'}= 35</span>

@@ -39,6 +39,7 @@ export interface AdmissionApplication {
     receiptNo?: string;
     paymentDate?: string;
     holdPromotion?: boolean;
+    promoteToClassId?: string;
     feeTypeCategory?: string; // e.g. Paying, Free, Scholarship
     casteCategory?: string;
     medium?: string;

@@ -46,6 +46,11 @@ export default function AdminBulkAdmissionsPage() {
         return () => unsubscribe();
     }, []);
 
+    // Clear table when class changes to prevent accidental cross-saving
+    useEffect(() => {
+        setRows([getEmptyRow()]);
+    }, [selectedClassId]);
+
     const loadExistingStudents = async () => {
         if (!selectedClassId) {
             alert("Please select a Class/Division first.");
@@ -127,6 +132,51 @@ export default function AdminBulkAdmissionsPage() {
             [docId]: !(currentDocs as any)[docId]
         };
         setRows(updatedRows);
+    };
+
+    const handleSaveSingle = async (index: number) => {
+        const row = rows[index];
+        if (!selectedClassId) {
+            alert("Please select a Class/Division first.");
+            return;
+        }
+        if (!row.studentName) {
+            alert("Please provide the student's name before saving.");
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const selectedClass: any = classes.find(c => c.id === selectedClassId);
+            const dataToSave: any = {
+                ...row,
+                classId: selectedClassId,
+                className: selectedClass?.name || '',
+                courseId: selectedClass?.courseId || '',
+                courseName: selectedClass?.courseName || '',
+                updatedAt: serverTimestamp(),
+            };
+
+            if (row.id) {
+                await updateDoc(doc(db, "admissions", row.id), dataToSave);
+                alert(`Successfully updated student ${row.studentName}.`);
+            } else {
+                dataToSave.status = 'APPROVED';
+                dataToSave.createdAt = serverTimestamp();
+                dataToSave.admissionDate = new Date().toISOString();
+                const docRef = await addDoc(collection(db, "admissions"), dataToSave);
+                
+                const updatedRows = [...rows];
+                updatedRows[index] = { ...updatedRows[index], id: docRef.id };
+                setRows(updatedRows);
+                alert(`Successfully added new student ${row.studentName}.`);
+            }
+        } catch (error) {
+            console.error("Error uniquely saving:", error);
+            alert("Error saving individual row.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleSaveAll = async () => {
@@ -309,10 +359,13 @@ export default function AdminBulkAdmissionsPage() {
 
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex items-center justify-center space-x-2">
-                                            <button onClick={() => setEditingIndex(index)} className="text-blue-500 hover:text-blue-700 transition-colors p-3 bg-slate-50 rounded-full hover:bg-white shadow-sm border border-transparent hover:border-blue-100" title="Full Form Edit (Options 1-12)">
+                                            <button onClick={() => handleSaveSingle(index)} disabled={saving} className="text-emerald-500 hover:text-emerald-700 transition-colors p-3 bg-slate-50 rounded-full hover:bg-white shadow-sm border border-transparent hover:border-emerald-100" title="Save Individual Row">
+                                                <Save size={18} />
+                                            </button>
+                                            <button onClick={() => setEditingIndex(index)} disabled={saving} className="text-blue-500 hover:text-blue-700 transition-colors p-3 bg-slate-50 rounded-full hover:bg-white shadow-sm border border-transparent hover:border-blue-100" title="Full Form Edit (Options 1-12)">
                                                 <Edit2 size={18} />
                                             </button>
-                                            <button onClick={() => removeRow(index)} className="text-slate-200 hover:text-rose-500 transition-colors p-3 bg-slate-50 rounded-full hover:bg-white shadow-sm border border-transparent hover:border-rose-100" title="Remove Row">
+                                            <button onClick={() => removeRow(index)} disabled={saving} className="text-slate-200 hover:text-rose-500 transition-colors p-3 bg-slate-50 rounded-full hover:bg-white shadow-sm border border-transparent hover:border-rose-100" title="Remove Row">
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>

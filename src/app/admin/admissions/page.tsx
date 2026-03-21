@@ -13,10 +13,10 @@ export default function AdminAdmissionsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("ALL");
     const [updatingId, setUpdatingId] = useState<string | null>(null);
-    const [classes, setClasses] = useState<{ id: string, name: string }[]>([]);
+    const [classes, setClasses] = useState<any[]>([]);
     const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
     const [editingApp, setEditingApp] = useState<AdmissionApplication | null>(null);
-    const [editingDetails, setEditingDetails] = useState({
+    const [editingDetails, setEditingDetails] = useState<any>({
         rollNumber: "",
         admissionDate: "",
         tenthBoard: ""
@@ -26,7 +26,7 @@ export default function AdminAdmissionsPage() {
         console.log("AdminAdmissionsPage: Initializing data fetch...");
         const q = query(collection(db, "classes"));
         const unsubscribe = onSnapshot(q, (snapshot: any) => {
-            setClasses(snapshot.docs.map((doc: any) => ({ id: doc.id, name: doc.data().name })));
+            setClasses(snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })));
         });
         return () => unsubscribe();
     }, []);
@@ -99,8 +99,37 @@ export default function AdminAdmissionsPage() {
         setEditingDetails({
             rollNumber: app.rollNumber || "",
             admissionDate: app.admissionDate || "",
-            tenthBoard: app.tenthBoard || "SSC State Board"
+            tenthBoard: app.tenthBoard || "",
+            classId: app.classId || "",
+            className: app.className || "",
+            courseId: app.courseId || "",
+            courseName: app.courseName || "",
+            currentClass: app.currentClass || "",
         });
+    };
+
+    const handleClassChange = (newClassId: string) => {
+        const foundClass = classes.find(c => c.id === newClassId);
+        if (foundClass) {
+            setEditingDetails({
+                ...editingDetails,
+                classId: foundClass.id,
+                className: foundClass.name,
+                courseId: foundClass.courseId || "",
+                courseName: foundClass.courseName || "",
+                currentClass: foundClass.standard || ""
+            });
+        } else {
+            // If no class is selected or found, clear class-related details
+            setEditingDetails({
+                ...editingDetails,
+                classId: "",
+                className: "",
+                courseId: "",
+                courseName: "",
+                currentClass: ""
+            });
+        }
     };
 
     const filteredApps = applications.filter(app => {
@@ -218,10 +247,24 @@ export default function AdminAdmissionsPage() {
                                         value={editingDetails.tenthBoard}
                                         onChange={(e) => setEditingDetails({ ...editingDetails, tenthBoard: e.target.value })}
                                     >
+                                        <option value="">-- Choose Board --</option>
                                         <option value="SSC State Board">SSC State Board</option>
                                         <option value="CBSE">CBSE</option>
                                         <option value="ICSE">ICSE</option>
                                         <option value="Other Board">Other Board</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Class/Division</label>
+                                    <select
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none"
+                                        value={editingDetails.classId || ""}
+                                        onChange={(e) => handleClassChange(e.target.value)}
+                                    >
+                                        <option value="">-- Assign a Class --</option>
+                                        {classes.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
