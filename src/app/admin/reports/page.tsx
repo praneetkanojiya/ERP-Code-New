@@ -164,8 +164,11 @@ export default function AdminReportsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                         <ReportCard title="Total Admissions" value={stats.totalAdmissions} icon={Users} color="text-blue-600" bg="bg-blue-50" />
                         <ReportCard title="Approved Students" value={stats.approvedAdmissions} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" />
-                        <ReportCard title="Total Revenue" value={`₹${stats.totalRevenue.toLocaleString()}`} icon={CreditCard} color="text-purple-600" bg="bg-purple-50" />
+                        {/* Hiding Revenue as per request to remove Fees Payments */}
+                        {/* <ReportCard title="Total Revenue" value={`₹${stats.totalRevenue.toLocaleString()}`} icon={CreditCard} color="text-purple-600" bg="bg-purple-50" /> */}
+                        {/* Adding a placeholder or another metric if needed, but for now just hide it */}
                         <ReportCard title="Avg Attendance" value={`${stats.avgAttendance}%`} icon={ClipboardList} color="text-orange-600" bg="bg-orange-50" />
+                        <ReportCard title="Academic Year" value="2024-25" icon={Layers} color="text-indigo-600" bg="bg-indigo-50" />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

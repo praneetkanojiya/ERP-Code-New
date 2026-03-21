@@ -13,9 +13,10 @@ export default function AdminDashboard() {
         { title: "Attendance", icon: ClipboardList, href: "/admin/attendance", color: "bg-emerald-500", desc: "Daily student logs" },
         { title: "Academic Marks", icon: BookOpen, href: "/admin/academic/marks", color: "bg-blue-600", desc: "Enter marks & promote" },
         { title: "Class Management", icon: Layers, href: "/admin/classes", color: "bg-indigo-500", desc: "Define divisions & sections" },
-        { title: "Fees & Payments", icon: CreditCard, href: "/admin/payments", color: "bg-purple-500", desc: "Mark manual payments" },
-        { title: "Fees Structure", icon: Settings, href: "/admin/fees/structure", color: "bg-rose-500", desc: "Set manual fee amounts" },
-        { title: "Student Logins", icon: GraduationCap, href: "/admin/students", color: "bg-slate-900", desc: "Manage portal access" },
+        // Hiding these modules as per user request (Mar 2026)
+        // { title: "Fees & Payments", icon: CreditCard, href: "/admin/payments", color: "bg-purple-500", desc: "Mark manual payments" },
+        // { title: "Fees Structure", icon: Settings, href: "/admin/fees/structure", color: "bg-rose-500", desc: "Set manual fee amounts" },
+        // { title: "Student Logins", icon: GraduationCap, href: "/admin/students", color: "bg-slate-900", desc: "Manage portal access" },
         { title: "Reports", icon: LayoutDashboard, href: "/admin/reports", color: "bg-orange-500", desc: "View payment status" },
     ];
 
@@ -111,24 +112,20 @@ export default function AdminDashboard() {
 
                 {/* Quick Stats section could be added here */}
                 <section className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Legacy stats: Admission Velocity and Payment Recovery removed as per request */}
                     <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
                         <div className="absolute right-[-10%] top-[-10%] w-[40%] h-[120%] bg-blue-500/10 rounded-full blur-[60px]" />
-                        <h4 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Admission Velocity</h4>
-                        <p className="text-3xl font-extrabold tracking-tight mb-2">+12% vs last week</p>
-                        <p className="text-slate-400 text-sm">Growth in new application flow</p>
+                        <h4 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Total Enrollment</h4>
+                        <p className="text-3xl font-extrabold tracking-tight mb-2">Active Academic Year</p>
+                        <p className="text-slate-400 text-sm">System is live and tracking admissions</p>
                     </div>
-                    <div className="bg-blue-600 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
-                        <h4 className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-4">Payment Recovery</h4>
-                        <p className="text-3xl font-extrabold tracking-tight mb-2">₹1.2M Collected</p>
-                        <p className="text-blue-100/70 text-sm">Revenue generated this month</p>
-                    </div>
-                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl">
+                    <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl md:col-span-2">
                         <h4 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">System Status</h4>
                         <div className="flex items-center space-x-2 text-emerald-600">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                            <p className="text-lg font-extrabold tracking-tight">Connected 24/7</p>
+                            <p className="text-lg font-extrabold tracking-tight uppercase">Database Online</p>
                         </div>
-                        <p className="text-slate-500 text-sm mt-2">Firebase Cloud DB is healthy</p>
+                        <p className="text-slate-500 text-sm mt-2">Real-time sync with Firebase Cloud DB is active and healthy.</p>
                     </div>
                 </section>
             </main>
