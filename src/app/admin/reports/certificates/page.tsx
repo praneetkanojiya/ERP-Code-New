@@ -23,6 +23,7 @@ export default function CertificatesPage() {
     const [selectedStudentId, setSelectedStudentId] = useState<string>("");
     
     const [selectedType, setSelectedType] = useState<CertificateType>("ATTENDANCE");
+    const [searchTerm, setSearchTerm] = useState<string>("");
     
     // Editable certificate fields
     const [editableFields, setEditableFields] = useState({
@@ -55,7 +56,9 @@ export default function CertificatesPage() {
     const filteredStudents = students.filter(s => {
         let matchYear = selectedAcademicYear === "all" || s.academicYear === selectedAcademicYear;
         let matchClass = selectedClassId === "all" || s.classId === selectedClassId;
-        return matchYear && matchClass;
+        let matchSearch = (s.studentName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (s.rollNumber || "").toLowerCase().includes(searchTerm.toLowerCase());
+        return matchYear && matchClass && matchSearch;
     });
 
     const selectedStudent = students.find(s => s.id === selectedStudentId);
@@ -328,18 +331,27 @@ export default function CertificatesPage() {
                                 {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.standard} - {c.academicYear} - {c.name}</option>)}
                             </select>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-2 space-y-2">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Active Student</label>
-                            <select
-                                className="w-full mt-2 px-4 py-3 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:outline-none focus:border-blue-300 font-black text-blue-700 transition-colors"
-                                value={selectedStudentId}
-                                onChange={(e) => setSelectedStudentId(e.target.value)}
-                            >
-                                <option value="">-- Select a Student --</option>
-                                {filteredStudents.map(s => (
-                                    <option key={s.id} value={s.id!}>{s.studentName} ({s.className || 'No Class'})</option>
-                                ))}
-                            </select>
+                            <div className="relative">
+                                <input 
+                                    type="text"
+                                    placeholder="Search by name or roll number..."
+                                    className="w-full px-4 py-2 mb-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 text-sm"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <select
+                                    className="w-full px-4 py-3 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:outline-none focus:border-blue-300 font-black text-blue-700 transition-colors"
+                                    value={selectedStudentId}
+                                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                                >
+                                    <option value="">-- Select a Student ({filteredStudents.length} matches) --</option>
+                                    {filteredStudents.map(s => (
+                                        <option key={s.id} value={s.id!}>{s.studentName} ({s.className || 'No Class'})</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
