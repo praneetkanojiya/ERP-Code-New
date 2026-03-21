@@ -347,6 +347,8 @@ export default function AdminBulkAdmissionsPage() {
                             <section className="bg-amber-50/50 p-6 rounded-3xl border border-amber-100/50">
                                 <h3 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-6">For Office Use Only</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <InputBlock label="Roll No." val={editingRow.rollNumber} onChange={(v: string) => handleChange(editingIndex, 'rollNumber', v)} />
+                                    <InputBlock label="Official Email" val={editingRow.email} onChange={(v: string) => handleChange(editingIndex, 'email', v)} type="email" />
                                     <InputBlock label="Form No." val={editingRow.formNo} onChange={(v: string) => handleChange(editingIndex, 'formNo', v)} />
                                     <InputBlock label="Amt. Paid Rs." val={editingRow.amountPaid} onChange={(v: string) => handleChange(editingIndex, 'amountPaid', parseFloat(v) || 0)} type="number" />
                                     <InputBlock label="Receipt No." val={editingRow.receiptNo} onChange={(v: string) => handleChange(editingIndex, 'receiptNo', v)} />
@@ -478,12 +480,20 @@ export default function AdminBulkAdmissionsPage() {
                                         <tbody>
                                             <tr>
                                                 <td className="p-2 border-r border-slate-200"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamName || ''} onChange={(e) => handleChange(editingIndex, 'lastExamName', e.target.value)} /></td>
-                                                <td className="p-2 border-r border-slate-200"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamBoard || ''} onChange={(e) => handleChange(editingIndex, 'lastExamBoard', e.target.value)} /></td>
+                                                <td className="p-2 border-r border-slate-200">
+                                                    <select className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.tenthBoard || ''} onChange={(e) => handleChange(editingIndex, 'tenthBoard', e.target.value)}>
+                                                        <option value="">-- Select Board --</option>
+                                                        <option value="SSC State Board">SSC State Board</option>
+                                                        <option value="CBSE">CBSE</option>
+                                                        <option value="ICSE">ICSE</option>
+                                                        <option value="Other Board">Other Board</option>
+                                                    </select>
+                                                </td>
                                                 <td className="p-2 border-r border-slate-200"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamSchool || ''} onChange={(e) => handleChange(editingIndex, 'lastExamSchool', e.target.value)} /></td>
                                                 <td className="p-2 border-r border-slate-200"><input className="w-full p-2 bg-transparent outline-none text-sm" placeholder="DD/MM/YYYY" value={editingRow.lastExamPassingDate || ''} onChange={(e) => handleChange(editingIndex, 'lastExamPassingDate', e.target.value)} /></td>
                                                 <td className="p-2 border-r border-slate-200"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamSeatNo || ''} onChange={(e) => handleChange(editingIndex, 'lastExamSeatNo', e.target.value)} /></td>
-                                                <td className="p-2 border-r border-slate-200"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamMarks || ''} onChange={(e) => handleChange(editingIndex, 'lastExamMarks', e.target.value)} /></td>
-                                                <td className="p-2"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamOutOf || ''} onChange={(e) => handleChange(editingIndex, 'lastExamOutOf', e.target.value)} /></td>
+                                                <td className="p-2 border-r border-slate-200"><input type="number" className="w-full p-2 bg-transparent outline-none text-sm" placeholder="%" value={editingRow.percentage || ''} onChange={(e) => handleChange(editingIndex, 'percentage', e.target.value)} /></td>
+                                                <td className="p-2"><input className="w-full p-2 bg-transparent outline-none text-sm" value={editingRow.lastExamOutOf || '100'} onChange={(e) => handleChange(editingIndex, 'lastExamOutOf', e.target.value)} /></td>
                                             </tr>
                                         </tbody>
                                     </table>
