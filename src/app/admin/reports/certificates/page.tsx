@@ -2,13 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, onSnapshot } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, serverTimestamp, getDocs, orderBy, limit } from "firebase/firestore";
 import { AdmissionApplication } from "@/types";
-import { ArrowLeft, Loader2, Printer, CheckCircle, FileText, Settings2, FileDown } from "lucide-react";
+import { ArrowLeft, Loader2, Printer, CheckCircle, FileText, Settings2, FileDown, History, Download, X } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, HeadingLevel, Table, TableRow, TableCell, WidthType } from "docx";
 import { saveAs } from "file-saver";
+
+interface IssuanceLog {
+    id?: string;
+    studentId: string;
+    studentName: string;
+    certificateType: string;
+    certificateNumber: string;
+    academicYear: string;
+    issuedAt: any;
+}
 
 type CertificateType = "ATTENDANCE" | "ATTEMPT" | "CHARACTER" | "BONAFIDE";
 
@@ -34,6 +44,16 @@ export default function CertificatesPage() {
         characterQuality: "good moral character"
     });
 
+    // Logging & History
+    const [issuanceLogs, setIssuanceLogs] = useState<IssuanceLog[]>([]);
+    const [showLogView, setShowLogView] = useState(false);
+    const [nextLogNumbers, setNextLogNumbers] = useState<Record<string, number>>({
+        BONAFIDE: 1,
+        CHARACTER: 1,
+        ATTEMPT: 1,
+        ATTENDANCE: 1
+    });
+
     useEffect(() => {
         const qClasses = query(collection(db, "classes"));
         const unsubClasses = onSnapshot(qClasses, (snap: any) => {
@@ -46,8 +66,35 @@ export default function CertificatesPage() {
             setStudents(apps.filter(app => app.status === 'APPROVED'));
             setLoading(false);
         });
-        return () => { unsubApps(); unsubClasses(); };
+
+        const qLogs = query(collection(db, "certificate_logs"), orderBy("issuedAt", "desc"));
+        const unsubLogs = onSnapshot(qLogs, (snapshot: any) => {
+            const logs = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as IssuanceLog[];
+            setIssuanceLogs(logs);
+
+            // Calculate next numbers for each type
+            const nextNums = { BONAFIDE: 1, CHARACTER: 1, ATTEMPT: 1, ATTENDANCE: 1 };
+            logs.forEach(log => {
+                const num = parseInt(log.certificateNumber);
+                const type = log.certificateType as keyof typeof nextNums;
+                if (!isNaN(num) && nextNums[type] <= num) {
+                    nextNums[type] = num + 1;
+                }
+            });
+            setNextLogNumbers(nextNums);
+        });
+
+        return () => { unsubApps(); unsubClasses(); unsubLogs(); };
     }, []);
+
+    // Effect to update certificate number when type changes
+    useEffect(() => {
+        if (!selectedStudentId) return;
+        setEditableFields(prev => ({
+            ...prev,
+            bonafideNo: nextLogNumbers[selectedType as keyof typeof nextLogNumbers].toString()
+        }));
+    }, [selectedType, selectedStudentId, nextLogNumbers]);
 
     // Filter logic
     const uniqueYears = Array.from(new Set(classes.map(c => c.academicYear).filter(Boolean)));
@@ -80,8 +127,44 @@ export default function CertificatesPage() {
         setEditableFields(prev => ({ ...prev, [field]: value }));
     };
 
+    const logIssuance = async () => {
+        if (!selectedStudent) return;
+        try {
+            await addDoc(collection(db, "certificate_logs"), {
+                studentId: selectedStudentId,
+                studentName: selectedStudent.studentName,
+                certificateType: selectedType,
+                certificateNumber: editableFields.bonafideNo,
+                academicYear: selectedStudent.academicYear || "N/A",
+                issuedAt: serverTimestamp()
+            });
+        } catch (e) {
+            console.error("Error logging issuance:", e);
+        }
+    };
+
     const printCertificate = () => {
+        logIssuance();
         window.print();
+    };
+
+    const exportLogCSV = () => {
+        if (!issuanceLogs.length) return;
+        const headers = ["ID", "Student Name", "Certificate Type", "Certificate No", "Academic Year", "Issued At"];
+        const rows = issuanceLogs.map(log => [
+            log.id,
+            log.studentName,
+            log.certificateType,
+            log.certificateNumber,
+            log.academicYear,
+            log.issuedAt?.toDate ? log.issuedAt.toDate().toLocaleString() : "Pending"
+        ]);
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Certificate_Issuance_Log_${new Date().toISOString().split('T')[0]}.csv`);
+        link.click();
     };
 
     const generateWordDoc = async () => {
@@ -163,6 +246,7 @@ export default function CertificatesPage() {
 
         const blob = await Packer.toBlob(doc);
         saveAs(blob, `${selectedStudent.studentName}_${selectedType}_Certificate.docx`);
+        logIssuance();
     };
 
     const getWordDocBody = () => {
@@ -291,110 +375,179 @@ export default function CertificatesPage() {
                     Back to Reports
                 </Link>
 
-                <header className="mb-10 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg"><FileText size={24}/></div>
-                    <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Certificate Studio</h1>
-                        <p className="text-slate-500 font-medium">Generate A4 print-ready certificates dynamically.</p>
+                <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg"><FileText size={24}/></div>
+                        <div>
+                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Certificate Studio</h1>
+                            <p className="text-slate-500 font-medium">Generate A4 print-ready certificates dynamically.</p>
+                        </div>
                     </div>
+                    <button 
+                        onClick={() => setShowLogView(!showLogView)}
+                        className="inline-flex items-center px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold shadow-sm hover:translate-y-[-2px] transition-all"
+                    >
+                        {showLogView ? <X size={20} className="mr-2" /> : <History size={20} className="mr-2 text-blue-600" />}
+                        {showLogView ? "Back to Studio" : "View Issuance History"}
+                    </button>
                 </header>
 
-                <div className="glass-card bg-white rounded-[2.5rem] shadow-xl border border-white p-8 mb-10 space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        {/* Filters */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Academic Year</label>
-                            <select
-                                className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-bold text-slate-700 disabled:opacity-50"
-                                value={selectedAcademicYear}
-                                onChange={(e) => {
-                                    setSelectedAcademicYear(e.target.value);
-                                    setSelectedClassId("all");
-                                    setSelectedStudentId("");
-                                }}
+                {showLogView ? (
+                    <div className="glass-card bg-white rounded-[2.5rem] shadow-xl border border-white p-10 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="flex justify-between items-center mb-10">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-2">Issuance History Log</h2>
+                                <p className="text-slate-500 font-medium">Persistent record of all certificates generated by the system.</p>
+                            </div>
+                            <button 
+                                onClick={exportLogCSV}
+                                className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center"
                             >
-                                <option value="all">All Years</option>
-                                {uniqueYears.map(yr => <option key={yr as string} value={yr as string}>{yr as string}</option>)}
-                            </select>
+                                <Download size={20} className="mr-2" />
+                                Export Log (Excel/CSV)
+                            </button>
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Class / Division</label>
-                            <select
-                                className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-bold text-slate-700 disabled:opacity-50"
-                                value={selectedClassId}
-                                onChange={(e) => {
-                                    setSelectedClassId(e.target.value);
-                                    setSelectedStudentId("");
-                                }}
-                            >
-                                <option value="all">All Classes</option>
-                                {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.standard} - {c.academicYear} - {c.name}</option>)}
-                            </select>
+                        
+                        <div className="overflow-x-auto rounded-[2rem] border border-slate-100">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 border-b border-slate-100">
+                                    <tr>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Student Name</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Type</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Cert No</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Year</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Issued On</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {issuanceLogs.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic font-medium">No certificates issued yet.</td>
+                                        </tr>
+                                    ) : (
+                                        issuanceLogs.map((log) => (
+                                            <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-6 py-4 font-bold text-slate-900">{log.studentName}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={cn(
+                                                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter",
+                                                        log.certificateType === 'BONAFIDE' ? "bg-amber-100 text-amber-700" :
+                                                        log.certificateType === 'CHARACTER' ? "bg-blue-100 text-blue-700" :
+                                                        "bg-purple-100 text-purple-700"
+                                                    )}>
+                                                        {log.certificateType}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 font-black text-slate-500">#{log.certificateNumber}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-500 font-bold">{log.academicYear}</td>
+                                                <td className="px-6 py-4 text-xs text-slate-400">
+                                                    {log.issuedAt?.toDate ? log.issuedAt.toDate().toLocaleString('en-GB') : "Processing..."}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                        <div className="md:col-span-2 space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Active Student</label>
-                            <div className="relative">
-                                <input 
-                                    type="text"
-                                    placeholder="Search by name or roll number..."
-                                    className="w-full px-4 py-2 mb-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 text-sm"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                    </div>
+                ) : (
+                    <div className="glass-card bg-white rounded-[2.5rem] shadow-xl border border-white p-8 mb-10 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {/* Filters */}
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Academic Year</label>
                                 <select
-                                    className="w-full px-4 py-3 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:outline-none focus:border-blue-300 font-black text-blue-700 transition-colors"
-                                    value={selectedStudentId}
-                                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                                    className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-bold text-slate-700 disabled:opacity-50"
+                                    value={selectedAcademicYear}
+                                    onChange={(e) => {
+                                        setSelectedAcademicYear(e.target.value);
+                                        setSelectedClassId("all");
+                                        setSelectedStudentId("");
+                                    }}
                                 >
-                                    <option value="">-- Select a Student ({filteredStudents.length} matches) --</option>
-                                    {filteredStudents.map(s => (
-                                        <option key={s.id} value={s.id!}>{s.studentName} ({s.className || 'No Class'})</option>
-                                    ))}
+                                    <option value="all">All Years</option>
+                                    {uniqueYears.map(yr => <option key={yr as string} value={yr as string}>{yr as string}</option>)}
                                 </select>
                             </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Class / Division</label>
+                                <select
+                                    className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-bold text-slate-700 disabled:opacity-50"
+                                    value={selectedClassId}
+                                    onChange={(e) => {
+                                        setSelectedClassId(e.target.value);
+                                        setSelectedStudentId("");
+                                    }}
+                                >
+                                    <option value="all">All Classes</option>
+                                    {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.standard} - {c.academicYear} - {c.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Active Student</label>
+                                <div className="relative">
+                                    <input 
+                                        type="text"
+                                        placeholder="Search by name or roll number..."
+                                        className="w-full px-4 py-2 mb-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 text-sm"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    <select
+                                        className="w-full px-4 py-3 bg-blue-50 border-2 border-blue-100 rounded-2xl focus:outline-none focus:border-blue-300 font-black text-blue-700 transition-colors"
+                                        value={selectedStudentId}
+                                        onChange={(e) => setSelectedStudentId(e.target.value)}
+                                    >
+                                        <option value="">-- Select a Student ({filteredStudents.length} matches) --</option>
+                                        {filteredStudents.map(s => (
+                                            <option key={s.id} value={s.id!}>{s.studentName} ({s.className || 'No Class'})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Certificate Template</label>
-                            <select
-                                className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-bold text-slate-700"
-                                value={selectedType}
-                                onChange={(e) => setSelectedType(e.target.value as CertificateType)}
-                            >
-                                <option value="ATTENDANCE">Attendance Certificate</option>
-                                <option value="ATTEMPT">Attempt Certificate</option>
-                                <option value="CHARACTER">Character Certificate</option>
-                                <option value="BONAFIDE">Bonafide Certificate</option>
-                            </select>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Certificate Template</label>
+                                <select
+                                    className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-bold text-slate-700"
+                                    value={selectedType}
+                                    onChange={(e) => setSelectedType(e.target.value as CertificateType)}
+                                >
+                                    <option value="ATTENDANCE">Attendance Certificate</option>
+                                    <option value="ATTEMPT">Attempt Certificate</option>
+                                    <option value="CHARACTER">Character Certificate</option>
+                                    <option value="BONAFIDE">Bonafide Certificate</option>
+                                </select>
+                            </div>
+                            <div className="flex items-end justify-end space-x-4">
+                                <button
+                                    onClick={printCertificate}
+                                    disabled={!selectedStudentId}
+                                    className="px-8 py-3 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-blue-600 focus:ring focus:ring-blue-200 transition-all flex items-center justify-center disabled:opacity-50 w-full md:w-auto"
+                                >
+                                    <Printer className="mr-2" size={20} />
+                                    Print A4 Document
+                                </button>
+                                <button
+                                    onClick={generateWordDoc}
+                                    disabled={!selectedStudentId}
+                                    className="px-8 py-3 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 focus:ring focus:ring-emerald-200 transition-all flex items-center justify-center disabled:opacity-50 w-full md:w-auto"
+                                >
+                                    <FileDown className="mr-2" size={20} />
+                                    Download Word (.docx)
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-end justify-end">
-                            <button
-                                onClick={printCertificate}
-                                disabled={!selectedStudentId}
-                                className="px-8 py-3 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-blue-600 focus:ring focus:ring-blue-200 transition-all flex items-center justify-center disabled:opacity-50 w-full md:w-auto"
-                            >
-                                <Printer className="mr-2" size={20} />
-                                Print A4 Document
-                            </button>
-                            <button
-                                onClick={generateWordDoc}
-                                disabled={!selectedStudentId}
-                                className="px-8 py-3 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 focus:ring focus:ring-emerald-200 transition-all flex items-center justify-center disabled:opacity-50 w-full md:w-auto"
-                            >
-                                <FileDown className="mr-2" size={20} />
-                                Download Word (.docx)
-                            </button>
-                        </div>
-                    </div>
 
-                    <p className="text-xs font-medium text-slate-400 text-center"><Settings2 size={12} className="inline mr-1" /> NOTE: Scroll down to the preview. You can click on dotted lines in the preview below to manually correct blank values before printing!</p>
-                </div>
+                        <p className="text-xs font-medium text-slate-400 text-center"><Settings2 size={12} className="inline mr-1" /> NOTE: Scroll down to the preview. You can click on dotted lines in the preview below to manually correct blank values before printing!</p>
+                    </div>
+                )}
             </div>
 
             {/* PRINT REGION - A4 PAPER PREVIEW AND RENDER */}
-            <div className={`w-full flex justify-center pb-20 print:p-0 print:block ${selectedStudentId ? 'block' : 'hidden md:flex'}`}>
+            <div className={`w-full flex justify-center pb-20 print:p-0 print:block ${selectedStudentId && !showLogView ? 'block' : 'hidden'}`}>
                 {/* 
                   A4 Paper Specifications:
                   Width: 210mm
