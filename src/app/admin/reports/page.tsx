@@ -101,23 +101,87 @@ export default function AdminReportsPage() {
             return;
         }
 
-        const headers = ["Student Name", "Roll Number", "Class Name", "Academic Year", "Phone", "Email", "Percentage", "Admission Status"];
-        const rows = admissionsList.map(app => [
-            `"${app.studentName}"`,
-            `"${app.rollNumber || ''}"`,
-            `"${app.className || ''}"`,
-            `"${app.academicYear || ''}"`,
-            `"${app.phone || ''}"`,
-            `"${app.email || ''}"`,
-            `"${app.percentage || '0'}"`,
-            `"${app.status}"`
-        ]);
+        // Identify all unique subjects across all students to create columns
+        const allSubjects = new Set<string>();
+        admissionsList.forEach(app => {
+            if (app.marks) {
+                Object.keys(app.marks).forEach(sub => allSubjects.add(sub));
+            }
+        });
+        const subjectList = Array.from(allSubjects).sort();
+
+        const headers = [
+            "Form No", "Student Name", "Roll Number", "Class", "Academic Year", 
+            "Course", "Subjects Offered", "Status", "Date of Birth", "DOB in Words", 
+            "Gender", "Aadhar No", "UDISE No", "Phoneno", "Email", 
+            "Mother's Name", "Father's Name", "Father's Occupation", "Annual Income",
+            "Caste", "Category", "Medium", "Permanent Address", "Permanent Phone",
+            "Local Address", "Local Phone", "Mother Tongue", "Bank A/c No",
+            "Last Exam Name", "Last Exam Board", "Last Exam School", "Last Exam Passing Date",
+            "Last Exam Seat No", "Last Exam Marks Obtained", "Last Exam Out Of",
+            "Percentage (Last)", "Games/Sports Info",
+            ...subjectList.map(s => `Mark: ${s}`),
+            "Doc: TC Submitted", "Doc: SSC Marksheet", "Doc: Aadhar (Student)", "Doc: Aadhar (Parent)", "Doc: Migration"
+        ];
+
+        const rows = admissionsList.map(app => {
+            const marksData = subjectList.map(s => app.marks?.[s] !== undefined ? app.marks[s] : "");
+            const docStatus = [
+                app.documents?.tc ? "YES" : "NO",
+                app.documents?.sscMarksheet ? "YES" : "NO",
+                app.documents?.aadharStudent ? "YES" : "NO",
+                app.documents?.aadharParent ? "YES" : "NO",
+                app.documents?.migration ? "YES" : "NO"
+            ];
+
+            return [
+                `"${app.formNo || ''}"`,
+                `"${app.studentName}"`,
+                `"${app.rollNumber || ''}"`,
+                `"${app.className || ''}"`,
+                `"${app.academicYear || ''}"`,
+                `"${app.courseName || ''}"`,
+                `"${app.subjectsOffered || ''}"`,
+                `"${app.status}"`,
+                `"${app.dateOfBirth || ''}"`,
+                `"${app.dobInWords || ''}"`,
+                `"${app.gender || ''}"`,
+                `"${app.aadharNo || ''}"`,
+                `"${app.udiseNo || ''}"`,
+                `"${app.phone || ''}"`,
+                `"${app.email || ''}"`,
+                `"${app.mothersName || ''}"`,
+                `"${app.fatherName || ''}"`,
+                `"${app.fatherOccupation || ''}"`,
+                `"${app.annualIncome || ''}"`,
+                `"${app.caste || ''}"`,
+                `"${app.category || ''}"`,
+                `"${app.medium || ''}"`,
+                `"${app.permanentAddress || ''}"`,
+                `"${app.permanentPhone || ''}"`,
+                `"${app.localAddress || ''}"`,
+                `"${app.localPhone || ''}"`,
+                `"${app.motherTongue || ''}"`,
+                `"${app.bankAccountNo || ''}"`,
+                `"${app.lastExamName || ''}"`,
+                `"${app.lastExamBoard || ''}"`,
+                `"${app.lastExamSchool || ''}"`,
+                `"${app.lastExamPassingDate || ''}"`,
+                `"${app.lastExamSeatNo || ''}"`,
+                `"${app.lastExamMarks || ''}"`,
+                `"${app.lastExamOutOf || ''}"`,
+                `"${app.percentage || '0'}%"`,
+                `"${app.gamesOrSports || ''}"`,
+                ...marksData.map(m => `"${m}"`),
+                ...docStatus.map(d => `"${d}"`)
+            ];
+        });
         
         const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Admissions_Report_${selectedClassId === 'all' ? 'All_Classes' : selectedClassId}.csv`);
+        link.setAttribute("download", `Full_Admission_Report_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, onSnapshot } from "firebase/firestore";
 import { AdmissionApplication } from "@/types";
-import { ArrowLeft, Loader2, Printer, CheckCircle, FileText, Settings2 } from "lucide-react";
+import { ArrowLeft, Loader2, Printer, CheckCircle, FileText, Settings2, FileDown } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, HeadingLevel, Table, TableRow, TableCell, WidthType } from "docx";
+import { saveAs } from "file-saver";
 
 type CertificateType = "ATTENDANCE" | "ATTEMPT" | "CHARACTER" | "BONAFIDE";
 
@@ -77,6 +79,202 @@ export default function CertificatesPage() {
 
     const printCertificate = () => {
         window.print();
+    };
+
+    const generateWordDoc = async () => {
+        if (!selectedStudent) return;
+
+        const doc = new Document({
+            sections: [{
+                properties: {
+                    page: {
+                        margin: {
+                            top: 720, // 0.5 inch
+                            right: 720,
+                            bottom: 720,
+                            left: 720,
+                        },
+                    },
+                },
+                children: [
+                    // Header Section
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                            new TextRun({ text: "Shree Sadguru Gajanan Bahuuddhesiya Sanstha’s", bold: true, size: 24 }),
+                        ],
+                    }),
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 200 },
+                        children: [
+                            new TextRun({ text: "LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE", bold: true, size: 40 }),
+                        ],
+                    }),
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 100, after: 400 },
+                        children: [
+                            new TextRun({ text: "JUNIOR COLLEGE, CHANKAPUR", bold: true, size: 36 }),
+                        ],
+                    }),
+
+                    // Horizontal Line Replacement (Border Box)
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { after: 600 },
+                        border: {
+                            bottom: { color: "auto", space: 1, style: BorderStyle.SINGLE, size: 6 },
+                        },
+                        children: [],
+                    }),
+
+                    // Main Content Title
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { after: 800 },
+                        children: [
+                            new TextRun({ text: selectedType === "BONAFIDE" ? "BONAFIDE CERTIFICATE" : 
+                                              selectedType === "CHARACTER" ? "CHARACTER CERTIFICATE" :
+                                              selectedType === "ATTEMPT" ? "ATTEMPT CERTIFICATE" : "ATTENDANCE CERTIFICATE", 
+                                              bold: true, size: 48, underline: { type: BorderStyle.SINGLE } }),
+                        ],
+                    }),
+
+                    // Dynamic Body Wrapper
+                    ...getWordDocBody(),
+
+                    // Footer Section (Seal and Principal)
+                    new Paragraph({
+                        alignment: AlignmentType.BOTH,
+                        spacing: { before: 2000 },
+                        children: [
+                            new TextRun({ text: "SEAL", bold: true, size: 28 }),
+                            new TextRun({ text: "\t\t\t\t\t\t\t\t" }), // Tabs for alignment
+                            new TextRun({ text: "PRINCIPAL", bold: true, size: 28 }),
+                        ],
+                    }),
+                ],
+            }],
+        });
+
+        const blob = await Packer.toBlob(doc);
+        saveAs(blob, `${selectedStudent.studentName}_${selectedType}_Certificate.docx`);
+    };
+
+    const getWordDocBody = () => {
+        const student = selectedStudent!;
+        let text = "";
+        
+        if (selectedType === "BONAFIDE") {
+            return [
+                new Paragraph({
+                    alignment: AlignmentType.LEFT,
+                    spacing: { line: 480 },
+                    children: [
+                        new TextRun({ text: `No: ${editableFields.bonafideNo}`, bold: true, size: 28 }),
+                        new TextRun({ text: "\t\t\t\t\t\t\t" }),
+                        new TextRun({ text: `Date: ${editableFields.certificateDate}`, bold: true, size: 28 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 600, line: 480 },
+                    children: [
+                        new TextRun({ text: `This is to certify that Mr./Mrs./Miss. `, size: 28 }),
+                        new TextRun({ text: fullName, bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: ` is/was a bonafied student of this college studying in `, size: 28 }),
+                        new TextRun({ text: (student.className || '').toUpperCase(), bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: ` class during the year `, size: 28 }),
+                        new TextRun({ text: student.academicYear || '', bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: `.`, size: 28 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 400, line: 480 },
+                    children: [
+                        new TextRun({ text: `His/Her Date of Birth as per College record is `, size: 28 }),
+                        new TextRun({ text: student.dateOfBirth || '', bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: `.`, size: 28 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 400, line: 480 },
+                    children: [
+                        new TextRun({ text: `While he/she is/was in this college, his / her conduct and character found to be good.`, size: 28 }),
+                    ],
+                }),
+            ];
+        }
+
+        if (selectedType === "CHARACTER") {
+            return [
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 600, line: 480 },
+                    children: [
+                        new TextRun({ text: `This is to certify that Master/Ms `, size: 28 }),
+                        new TextRun({ text: fullName, bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: ` was a pupil of the LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, Chankapur and that he/she has passed H.S.S.C Examination of March/Oct `, size: 28 }),
+                        new TextRun({ text: yearEndFull, bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: `.`, size: 28 }),
+                    ],
+                }),
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 600, line: 480 },
+                    children: [
+                        new TextRun({ text: `He/She is a disciplined and obedient student and has a `, size: 28 }),
+                        new TextRun({ text: editableFields.characterQuality, bold: true, size: 28 }),
+                        new TextRun({ text: `. I wish him/her success in his/her future life.`, size: 28 }),
+                    ],
+                }),
+            ];
+        }
+
+        if (selectedType === "ATTEMPT") {
+            return [
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 600, line: 480 },
+                    children: [
+                        new TextRun({ text: `This is to certify that Master/Ms `, size: 28 }),
+                        new TextRun({ text: fullName, bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: ` was a Pupil of the LATE LAXMILAL KANOJIYA ARTS, COMMERCE AND SCIENCE JUNIOR COLLEGE, Chankapur and that he/she has passed H.S.S.C Examination of March/Oct `, size: 28 }),
+                        new TextRun({ text: yearEndFull, bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: ` in `, size: 28 }),
+                        new TextRun({ text: editableFields.attemptNumber, bold: true, italics: true, size: 28 }),
+                        new TextRun({ text: `.`, size: 28 }),
+                    ],
+                }),
+            ];
+        }
+
+        if (selectedType === "ATTENDANCE") {
+            return [
+                new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 600, line: 480 },
+                    children: [
+                        new TextRun({ text: `This is to certify that Mr./Miss./Mrs. `, size: 28 }),
+                        new TextRun({ text: fullName, bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: `. With general register number, `, size: 28 }),
+                        new TextRun({ text: student.rollNumber || '', bold: true, underline: { type: BorderStyle.SINGLE }, size: 28 }),
+                        new TextRun({ text: ` is/was a Bonafide student of this college studying in `, size: 28 }),
+                        new TextRun({ text: (student.className || '').toUpperCase(), bold: true, size: 28 }),
+                        new TextRun({ text: ` and his/her attendance is/was `, size: 28 }),
+                        new TextRun({ text: `${editableFields.attendancePercent}%`, bold: true, size: 28 }),
+                        new TextRun({ text: ` for the academic year `, size: 28 }),
+                        new TextRun({ text: student.academicYear || '', bold: true, size: 28 }),
+                        new TextRun({ text: `.`, size: 28 }),
+                    ],
+                }),
+            ];
+        }
+
+        return [];
     };
 
     if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500" size={32} /></div>;
@@ -167,6 +365,14 @@ export default function CertificatesPage() {
                             >
                                 <Printer className="mr-2" size={20} />
                                 Print A4 Document
+                            </button>
+                            <button
+                                onClick={generateWordDoc}
+                                disabled={!selectedStudentId}
+                                className="px-8 py-3 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:bg-emerald-600 focus:ring focus:ring-emerald-200 transition-all flex items-center justify-center disabled:opacity-50 w-full md:w-auto"
+                            >
+                                <FileDown className="mr-2" size={20} />
+                                Download Word (.docx)
                             </button>
                         </div>
                     </div>
