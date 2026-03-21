@@ -86,9 +86,36 @@ export default function AdminBulkAdmissionsPage() {
         }
     };
 
-    const handleChange = (index: number, field: keyof AdmissionApplication, value: any) => {
+    const handleChange = (index: number, field: keyof AdmissionApplication | 'namePrefix', value: any) => {
         const updatedRows = [...rows];
-        updatedRows[index] = { ...updatedRows[index], [field]: value };
+        const row = { ...updatedRows[index], [field as any]: value };
+        
+        if (field === 'studentName' && value) {
+            const parts = (value as string).split(' ').filter(Boolean);
+            if (['Shri', 'Smt', 'Ku'].includes(parts[0])) {
+                row.namePrefix = parts[0] as any;
+                parts.shift();
+            }
+            if (parts.length > 0) row.firstName = parts[0] as any;
+            if (parts.length > 2) {
+                row.lastName = parts.pop() as any;
+                row.middleName = parts.join(' ') as any;
+            } else if (parts.length === 2) {
+                row.lastName = parts[1] as any;
+                row.middleName = '' as any;
+            } else {
+                row.lastName = '' as any;
+                row.middleName = '' as any;
+            }
+        } else if (['namePrefix', 'firstName', 'middleName', 'lastName'].includes(field)) {
+            const prefix = row.namePrefix ? row.namePrefix + ' ' : '';
+            const first = row.firstName || '';
+            const middle = row.middleName ? ' ' + row.middleName : '';
+            const last = row.lastName ? ' ' + row.lastName : '';
+            row.studentName = `${prefix}${first}${middle}${last}`.trim().replace(/\s+/g, ' ');
+        }
+
+        updatedRows[index] = row;
         setRows(updatedRows);
     };
 
@@ -342,11 +369,24 @@ export default function AdminBulkAdmissionsPage() {
                             {/* 1. Name */}
                             <section>
                                 <h3 className="text-sm font-bold text-slate-900 mb-4 bg-slate-100 px-4 py-2 rounded-lg inline-block">1) Name in full</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 block mb-1">Prefix</label>
+                                        <select 
+                                            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
+                                            value={editingRow.namePrefix || ''}
+                                            onChange={(e) => handleChange(editingIndex, 'namePrefix' as any, e.target.value)}
+                                        >
+                                            <option value="">None</option>
+                                            <option value="Shri">Shri</option>
+                                            <option value="Smt">Smt</option>
+                                            <option value="Ku">Ku</option>
+                                        </select>
+                                    </div>
                                     <InputBlock label="First Name" val={editingRow.firstName} onChange={(v: string) => handleChange(editingIndex, 'firstName', v)} />
                                     <InputBlock label="Middle Name" val={editingRow.middleName} onChange={(v: string) => handleChange(editingIndex, 'middleName', v)} />
                                     <InputBlock label="Surname" val={editingRow.lastName} onChange={(v: string) => handleChange(editingIndex, 'lastName', v)} />
-                                    <div className="md:col-span-3">
+                                    <div className="md:col-span-4">
                                         <InputBlock label="Mother's Name" val={editingRow.mothersName} onChange={(v: string) => handleChange(editingIndex, 'mothersName', v)} />
                                     </div>
                                 </div>

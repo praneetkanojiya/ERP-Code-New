@@ -25,6 +25,7 @@ export default function AdminReportsPage() {
         totalRevenue: 0,
         avgAttendance: 0,
     });
+    const [admissionsList, setAdmissionsList] = useState<AdmissionApplication[]>([]);
     const [courseDistribution, setCourseDistribution] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -46,7 +47,7 @@ export default function AdminReportsPage() {
                 admissionQuery = query(collection(db, "admissions"), where("classId", "==", selectedClassId));
             }
             const admissionSnap = await getDocs(admissionQuery);
-            const admissions = admissionSnap.docs.map((doc: any) => doc.data()) as AdmissionApplication[];
+            const admissions = admissionSnap.docs.map((doc: any) => ({id: doc.id, ...doc.data()})) as AdmissionApplication[];
 
             // Fetch Payments (Transactions) - Linked to admissions in that class
             let paymentsSnap;
@@ -86,6 +87,7 @@ export default function AdminReportsPage() {
                 totalRevenue,
                 avgAttendance: Math.round(avgAtt),
             });
+            setAdmissionsList(admissions);
             setCourseDistribution(distribution);
             setLoading(false);
         };
@@ -183,6 +185,53 @@ export default function AdminReportsPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Class-wise Admissions Details Report */}
+                    {selectedClassId !== "all" && (
+                        <div className="mt-8 glass-card p-10 rounded-[3rem] bg-white shadow-xl border border-white">
+                            <h3 className="text-2xl font-bold mb-2">Class Admission Report</h3>
+                            <p className="text-slate-500 font-medium mb-8">Detailed view of students enrolled in the currently selected class.</p>
+                            
+                            <div className="overflow-x-auto rounded-3xl border border-slate-100">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 border-b border-slate-100">
+                                        <tr>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Student Name</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Roll No</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Contact Details</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Subjects Offered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {admissionsList.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 italic">No students found.</td>
+                                            </tr>
+                                        ) : (
+                                            admissionsList.map(app => (
+                                                <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-bold text-slate-900">{app.studentName}</div>
+                                                        <div className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{app.courseName || 'N/A'}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 font-bold text-blue-600">
+                                                        {app.rollNumber || 'Not Assigned'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-slate-700">{app.phone || 'N/A'}</div>
+                                                        <div className="text-xs text-slate-400">{app.email || 'N/A'}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-xs text-slate-500">{app.subjectsOffered || 'Default Course Subjects'}</span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
         </div>

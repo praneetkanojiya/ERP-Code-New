@@ -139,7 +139,49 @@ export default function AdminAdmissionsPage() {
 
             {/* Main Content */}
             <main className="flex-1 p-6 md:p-10 overflow-auto relative">
-                {/* ... existing header and filters ... */}
+                {/* Header */}
+                <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-tight">Admissions Pipeline</h1>
+                        <p className="text-slate-500 font-medium">Review, approve, or reject student applications.</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                        <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-1 w-full sm:w-auto">
+                            <Layers className="text-slate-400 ml-3 shrink-0" size={18} />
+                            <select
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-4 py-1 w-full cursor-pointer"
+                                value={selectedClassId}
+                                onChange={(e) => setSelectedClassId(e.target.value)}
+                            >
+                                <option value="ALL">All Classes & Divisions</option>
+                                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-1 w-full sm:w-auto">
+                            <Filter className="text-slate-400 ml-3 shrink-0" size={18} />
+                            <select
+                                className="bg-transparent text-sm font-bold text-slate-900 outline-none pr-4 py-1 w-full cursor-pointer"
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                <option value="ALL">All Statuses</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
+                        </div>
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search by name or roll no..."
+                                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </header>
 
                 {/* Edit Modal */}
                 {editingApp && (

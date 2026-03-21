@@ -61,17 +61,40 @@ export default function AdminAcademicMarksPage() {
         setStudents(updated);
     };
 
-    const getSubjectsForCourse = (courseId: string) => {
-        const course = COLLEGES_COURSES.find(c => c.id === courseId);
+    const handleSubjectsChange = (studentId: string, newSubjectsStr: string) => {
+        const updated = [...students];
+        const index = updated.findIndex(s => s.id === studentId);
+        if (index === -1) return;
+        updated[index].subjectsOffered = newSubjectsStr;
+        setStudents(updated);
+    };
+
+    const toggleHoldPromotion = (studentId: string) => {
+        const updated = [...students];
+        const index = updated.findIndex(s => s.id === studentId);
+        if (index === -1) return;
+        updated[index].holdPromotion = !updated[index].holdPromotion;
+        setStudents(updated);
+    };
+
+    const getSubjectsForStudent = (student: AdmissionApplication) => {
+        if (student.subjectsOffered && student.subjectsOffered.trim().length > 0) {
+            return student.subjectsOffered.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        const course = COLLEGES_COURSES.find(c => c.id === student.courseId);
         return course?.subjects || ["English", "Mathematics", "Science", "Social Studies"];
     };
 
     const saveMarks = async (student: AdmissionApplication) => {
         setSavingId(student.id!);
         try {
-            const subjects = getSubjectsForCourse(student.courseId);
-            const isPassed = subjects.every(sub => (student.marks?.[sub] || 0) >= 35); // 35 is passing
-            const nextClass = (isPassed && student.currentClass === '11th') ? '12th' : (student.currentClass || '11th');
+            const subjects = getSubjectsForStudent(student);
+            const isPassed = subjects.length > 0 ? subjects.every(sub => (student.marks?.[sub] || 0) >= 35) : false; // 35 is passing
+            
+            let nextClass = student.currentClass || '11th';
+            if (isPassed && student.currentClass === '11th' && !student.holdPromotion) {
+                nextClass = '12th';
+            }
 
             await setDoc(doc(db, "admissions", student.id!), {
                 ...student,
@@ -79,10 +102,10 @@ export default function AdminAcademicMarksPage() {
                 updatedAt: serverTimestamp(),
             });
 
-            if (isPassed && student.currentClass === '11th') {
+            if (nextClass === '12th' && student.currentClass === '11th') {
                 alert(`${student.studentName} PASSED and has been PROMOTED to 12th Standard!`);
             } else {
-                alert(`Marks updated for ${student.studentName}.`);
+                alert(`Details and Marks updated for ${student.studentName}.`);
             }
         } catch (error) {
             console.error(error);
@@ -140,8 +163,8 @@ export default function AdminAcademicMarksPage() {
             ) : (
                 <div className="space-y-8">
                     {filtered.map((student) => {
-                        const subjects = getSubjectsForCourse(student.courseId);
-                        const isSufficient = subjects.every(sub => (student.marks?.[sub] || 0) >= 35);
+                        const subjects = getSubjectsForStudent(student);
+                        const isPassed = subjects.length > 0 ? subjects.every(sub => (student.marks?.[sub] || 0) >= 35) : false;
 
                         return (
                             <div key={student.id} className="glass-card bg-white rounded-[2.5rem] shadow-xl border border-white p-8 overflow-hidden group hover:border-blue-200 transition-all">
@@ -175,6 +198,28 @@ export default function AdminAcademicMarksPage() {
                                     </div>
                                 </div>
 
+                                <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-xs font-bold text-slate-700">Subjects Offered (Comma Separated)</label>
+                                        <label className="flex items-center space-x-2 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={student.holdPromotion || false} 
+                                                onChange={() => toggleHoldPromotion(student.id!)} 
+                                                className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 w-4 h-4 cursor-pointer" 
+                                            />
+                                            <span className="text-xs font-bold text-rose-500 uppercase tracking-widest">Hold Promotion</span>
+                                        </label>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        value={student.subjectsOffered !== undefined ? student.subjectsOffered : getSubjectsForStudent(student).join(', ')} 
+                                        onChange={(e) => handleSubjectsChange(student.id!, e.target.value)} 
+                                        className="w-full px-4 py-2 text-sm font-bold bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500 transition-all"
+                                        placeholder="e.g. English, Physics, Chemistry..."
+                                    />
+                                </div>
+
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                                     {subjects.map(sub => (
                                         <div key={sub} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -198,10 +243,10 @@ export default function AdminAcademicMarksPage() {
 
                                 <div className="mt-8 flex items-center justify-between">
                                     <div className="flex items-center space-x-2">
-                                        <Award className={cn("inline-block", isSufficient ? "text-emerald-500" : "text-slate-300")} size={20} />
+                                        <Award className={cn("inline-block", isPassed ? "text-emerald-500" : "text-slate-300")} size={20} />
                                         <span className="text-sm font-bold text-slate-500">
-                                            Status: <span className={cn(isSufficient ? "text-emerald-600" : "text-rose-500")}>
-                                                {isSufficient ? "QUALIFIED FOR PROMOTION" : "REPEATER / INCOMPLETE"}
+                                            Status: <span className={cn(isPassed ? "text-emerald-600" : "text-rose-500")}>
+                                                {isPassed ? (student.holdPromotion ? "QUALIFIED (HELD)" : "QUALIFIED FOR PROMOTION") : "REPEATER / INCOMPLETE"}
                                             </span>
                                         </span>
                                     </div>

@@ -3,6 +3,7 @@ export type AdmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'WAITLISTED'
 export interface AdmissionApplication {
     id?: string;
     studentName: string;
+    namePrefix?: string;
     email: string;
     phone: string;
     dateOfBirth: string;
@@ -37,6 +38,7 @@ export interface AdmissionApplication {
     amountPaid?: number;
     receiptNo?: string;
     paymentDate?: string;
+    holdPromotion?: boolean;
     feeTypeCategory?: string; // e.g. Paying, Free, Scholarship
     casteCategory?: string;
     medium?: string;
